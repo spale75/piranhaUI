@@ -45,7 +45,7 @@ CREATE TABLE `aspath` (
   KEY `idx_aspath6` (`aspath6`),
   KEY `idx_aspath7` (`aspath7`),
   KEY `idx_aspath8` (`aspath8`)
-) ENGINE=InnoDB AUTO_INCREMENT=207803 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=213975 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -78,7 +78,7 @@ CREATE TABLE `community` (
   KEY `idx_community6` (`community6`),
   KEY `idx_community7` (`community7`),
   KEY `idx_community8` (`community8`)
-) ENGINE=InnoDB AUTO_INCREMENT=202 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=219 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -155,50 +155,18 @@ DELIMITER ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
--- Table structure for table `rdap_cache_asn`
+-- Table structure for table `rdap_cache`
 --
 
-DROP TABLE IF EXISTS `rdap_cache_asn`;
+DROP TABLE IF EXISTS `rdap_cache`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `rdap_cache_asn` (
-  `asn` int(10) NOT NULL,
-  `json` text NOT NULL,
+CREATE TABLE `rdap_cache` (
+  `name` varchar(50) NOT NULL,
+  `value` text NOT NULL,
   `valid` datetime NOT NULL,
-  PRIMARY KEY (`asn`),
-  KEY `index1` (`asn`,`valid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `rdap_cache_ip4`
---
-
-DROP TABLE IF EXISTS `rdap_cache_ip4`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `rdap_cache_ip4` (
-  `asn` int(10) NOT NULL,
-  `json` text NOT NULL,
-  `valid` datetime NOT NULL,
-  PRIMARY KEY (`asn`),
-  KEY `index1` (`asn`,`valid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `rdap_cache_ip6`
---
-
-DROP TABLE IF EXISTS `rdap_cache_ip6`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `rdap_cache_ip6` (
-  `asn` int(10) NOT NULL,
-  `json` text NOT NULL,
-  `valid` datetime NOT NULL,
-  PRIMARY KEY (`asn`),
-  KEY `index1` (`asn`,`valid`)
+  PRIMARY KEY (`name`),
+  KEY `index1` (`name`,`valid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -249,15 +217,16 @@ DROP TABLE IF EXISTS `rdap_root_ip4`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `rdap_root_ip4` (
-  `prefix` int(10) unsigned NOT NULL,
+  `networkb` int(10) unsigned NOT NULL,
+  `networke` int(10) unsigned NOT NULL DEFAULT '0',
   `netmask` int(10) unsigned NOT NULL,
-  `size` int(10) unsigned NOT NULL DEFAULT '0',
   `rir` varchar(50) NOT NULL,
   `rdap` varchar(50) DEFAULT NULL,
   `rdaps` varchar(50) DEFAULT NULL,
   `descr` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`prefix`,`netmask`) USING BTREE,
-  KEY `index2` (`rir`)
+  PRIMARY KEY (`networkb`,`netmask`) USING BTREE,
+  KEY `index2` (`rir`),
+  KEY `index3` (`networkb`,`networke`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -273,9 +242,9 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `piranha`.`rdap_root_ip4_BEFORE_INSERT` BEFORE INSERT ON `rdap_root_ip4` FOR EACH ROW
 BEGIN
 	IF NEW.netmask = 0 THEN
-		SET NEW.size = CONV(HEX(0xffffffff),16,10);
+		SET NEW.networke = CONV(HEX(0xffffffff),16,10);
 	ELSE
-		SET NEW.size = (1<<(32-NEW.netmask)) - 1;
+		SET NEW.networke = NEW.networkb + (1<<(32-NEW.netmask))-1;
 	END IF;
 END */;;
 DELIMITER ;
@@ -292,15 +261,18 @@ DROP TABLE IF EXISTS `rdap_root_ip6`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `rdap_root_ip6` (
-  `prefix` bigint(20) unsigned NOT NULL,
+  `networkb1` bigint(20) unsigned NOT NULL,
+  `networkb2` bigint(20) unsigned NOT NULL,
+  `networke1` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `networke2` bigint(20) unsigned NOT NULL DEFAULT '0',
   `netmask` tinyint(3) unsigned NOT NULL,
-  `size` bigint(20) unsigned NOT NULL DEFAULT '0',
   `rir` varchar(50) NOT NULL,
   `rdap` varchar(50) DEFAULT NULL,
   `rdaps` varchar(50) DEFAULT NULL,
   `descr` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`prefix`,`netmask`) USING BTREE,
-  KEY `index2` (`rir`)
+  PRIMARY KEY (`networkb1`,`netmask`) USING BTREE,
+  KEY `index2` (`rir`),
+  KEY `index3` (`networkb1`,`networkb2`,`networke1`,`networke2`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -316,9 +288,14 @@ DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `piranha`.`rdap_root_ip6_BEFORE_INSERT` BEFORE INSERT ON `rdap_root_ip6` FOR EACH ROW
 BEGIN
 	IF NEW.netmask = 0 THEN
-		SET NEW.size = CONV(HEX(0xffffffffffffffff),16,10);
+		SET NEW.networke1 = CONV(HEX(0xffffffffffffffff),16,10);
+        SET NEW.networke2 = CONV(HEX(0xffffffffffffffff),16,10);
+	ELSEIF NEW.netmask <= 64 THEN
+		SET NEW.networke1 = (1<<(64-NEW.netmask)) - 1 + NEW.networkb1;
+		SET NEW.networke2 = CONV(HEX(0xffffffffffffffff),16,10);
 	ELSE
-		SET NEW.size = (1<<(64-NEW.netmask)) - 1;
+		SET NEW.networke1 = NEW.networkb1;
+        SET NEW.networke2 = NEW.networkb2 + (1<<(128-NEW.netmask))-1;
 	END IF;
 END */;;
 DELIMITER ;
@@ -539,78 +516,22 @@ CREATE TABLE `template_route6` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Temporary table structure for view `view_route4`
---
-
-DROP TABLE IF EXISTS `view_route4`;
-/*!50001 DROP VIEW IF EXISTS `view_route4`*/;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE VIEW `view_route4` AS SELECT 
- 1 AS `peer_ip`,
- 1 AS `peer_asn`,
- 1 AS `prefix`,
- 1 AS `aspath`,
- 1 AS `community`,
- 1 AS `valid`,
- 1 AS `updated`,
- 1 AS `route_networkb`,
- 1 AS `route_networke`,
- 1 AS `route_netmask`,
- 1 AS `peer_id`,
- 1 AS `origin_as`,
- 1 AS `flap_a`,
- 1 AS `flap_w`,
- 1 AS `aslen`,
- 1 AS `aspath_id`*/;
-SET character_set_client = @saved_cs_client;
-
---
--- Temporary table structure for view `view_route6`
---
-
-DROP TABLE IF EXISTS `view_route6`;
-/*!50001 DROP VIEW IF EXISTS `view_route6`*/;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE VIEW `view_route6` AS SELECT 
- 1 AS `peer_ip`,
- 1 AS `peer_asn`,
- 1 AS `prefix`,
- 1 AS `aspath`,
- 1 AS `community`,
- 1 AS `valid`,
- 1 AS `updated`,
- 1 AS `route_networkb1`,
- 1 AS `route_networkb2`,
- 1 AS `route_networke1`,
- 1 AS `route_networke2`,
- 1 AS `route_netmask`,
- 1 AS `peer_id`,
- 1 AS `origin_as`,
- 1 AS `flap_a`,
- 1 AS `flap_w`,
- 1 AS `aslen`,
- 1 AS `aspath_id`*/;
-SET character_set_client = @saved_cs_client;
-
---
 -- Dumping events for database 'piranha'
 --
 /*!50106 SET @save_time_zone= @@TIME_ZONE */ ;
-/*!50106 DROP EVENT IF EXISTS `asinfo_cleanup` */;
+/*!50106 DROP EVENT IF EXISTS `rdap_cleanup` */;
 DELIMITER ;;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;;
-/*!50003 SET character_set_client  = utf8 */ ;;
-/*!50003 SET character_set_results = utf8 */ ;;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;;
+/*!50003 SET character_set_client  = utf8mb4 */ ;;
+/*!50003 SET character_set_results = utf8mb4 */ ;;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;;
 /*!50003 SET @saved_time_zone      = @@time_zone */ ;;
 /*!50003 SET time_zone             = 'SYSTEM' */ ;;
-/*!50106 CREATE*/ /*!50117 DEFINER=`debian-sys-maint`@`localhost`*/ /*!50106 EVENT `asinfo_cleanup` ON SCHEDULE EVERY 1 HOUR STARTS '2017-10-18 22:37:38' ON COMPLETION NOT PRESERVE ENABLE DO DELETE FROM asinfo_rdap WHERE valid < NOW() */ ;;
+/*!50106 CREATE*/ /*!50117 DEFINER=`debian-sys-maint`@`localhost`*/ /*!50106 EVENT `rdap_cleanup` ON SCHEDULE EVERY 1 HOUR STARTS '2017-10-18 22:37:38' ON COMPLETION NOT PRESERVE ENABLE DO DELETE FROM rdap_cache WHERE valid < NOW() */ ;;
 /*!50003 SET time_zone             = @saved_time_zone */ ;;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;;
@@ -710,7 +631,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `INET6_FROM2INT`(prefix1 BIGINT UNSIGNED, prefix2 BIGINT UNSIGNED) RETURNS varchar(50) CHARSET latin1
+CREATE DEFINER=`root`@`localhost` FUNCTION `inet6_from2int`(prefix1 BIGINT UNSIGNED, prefix2 BIGINT UNSIGNED) RETURNS varchar(50) CHARSET latin1
 BEGIN
 
 RETURN INET6_NTOA(
@@ -738,7 +659,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `INET6_MASK`(prefix VARCHAR(50), mask INTEGER UNSIGNED) RETURNS varchar(50) CHARSET latin1
+CREATE DEFINER=`root`@`localhost` FUNCTION `inet6_mask`(prefix VARCHAR(50), mask INTEGER UNSIGNED) RETURNS varchar(50) CHARSET latin1
 BEGIN
 
 DECLARE p1 BIGINT UNSIGNED;
@@ -787,7 +708,7 @@ ALTER DATABASE `piranha` CHARACTER SET latin1 COLLATE latin1_swedish_ci ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = '' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `INET_MASK`(prefix VARCHAR(15), mask INTEGER UNSIGNED) RETURNS varchar(15) CHARSET latin1
+CREATE DEFINER=`root`@`localhost` FUNCTION `inet_mask`(prefix VARCHAR(15), mask INTEGER UNSIGNED) RETURNS varchar(15) CHARSET latin1
 BEGIN
 
 IF mask > 32
@@ -813,7 +734,7 @@ ALTER DATABASE `piranha` CHARACTER SET utf8 COLLATE utf8_general_ci ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `SHOW_ASPATH`(
+CREATE DEFINER=`root`@`localhost` FUNCTION `show_aspath`(
 	len INTEGER UNSIGNED,
 	p1 VARBINARY(128),
     p2 VARBINARY(128),
@@ -884,7 +805,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `SHOW_COMMUNITY`(
+CREATE DEFINER=`root`@`localhost` FUNCTION `show_community`(
 	len INTEGER UNSIGNED,
 	p1 VARBINARY(128),
     p2 VARBINARY(128),
@@ -1853,42 +1774,6 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-
---
--- Final view structure for view `view_route4`
---
-
-/*!50001 DROP VIEW IF EXISTS `view_route4`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8 */;
-/*!50001 SET character_set_results     = utf8 */;
-/*!50001 SET collation_connection      = utf8_general_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `view_route4` AS select inet_ntoa(`peer`.`ip4`) AS `peer_ip`,`peer`.`asn` AS `peer_asn`,concat(`INET_MASK`(inet_ntoa(`route`.`networkb`),`route`.`netmask`),'/',`route`.`netmask`) AS `prefix`,`SHOW_ASPATH`(`aspath`.`aslen`,`aspath`.`aspath1`,`aspath`.`aspath2`,`aspath`.`aspath3`,`aspath`.`aspath4`,`aspath`.`aspath5`,`aspath`.`aspath6`,`aspath`.`aspath7`,`aspath`.`aspath8`,`peer`.`asn`) AS `aspath`,`SHOW_COMMUNITY`(`community`.`comlen`,`community`.`community1`,`community`.`community2`,`community`.`community3`,`community`.`community4`,`community`.`community5`,`community`.`community6`,`community`.`community7`,`community`.`community8`) AS `community`,`route`.`valid` AS `valid`,`route`.`lastupdate` AS `updated`,`route`.`networkb` AS `route_networkb`,`route`.`networke` AS `route_networke`,`route`.`netmask` AS `route_netmask`,`route`.`peerid` AS `peer_id`,`route`.`origin_as` AS `origin_as`,`route`.`flap_a` AS `flap_a`,`route`.`flap_w` AS `flap_w`,`aspath`.`aslen` AS `aslen`,`aspath`.`id` AS `aspath_id` from (((`route4` `route` left join `peer` on((`peer`.`id` = `route`.`peerid`))) left join `aspath` on((`aspath`.`id` = `route`.`aspathid`))) left join `community` on((`community`.`id` = `route`.`communityid`))) */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
-
---
--- Final view structure for view `view_route6`
---
-
-/*!50001 DROP VIEW IF EXISTS `view_route6`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8 */;
-/*!50001 SET character_set_results     = utf8 */;
-/*!50001 SET collation_connection      = utf8_general_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `view_route6` AS select `peer`.`ip6` AS `peer_ip`,`peer`.`asn` AS `peer_asn`,concat(`INET6_MASK`(`INET6_FROM2INT`(`route6`.`networkb1`,`route6`.`networkb2`),`route6`.`netmask`),'/',`route6`.`netmask`) AS `prefix`,`SHOW_ASPATH`(`aspath`.`aslen`,`aspath`.`aspath1`,`aspath`.`aspath2`,`aspath`.`aspath3`,`aspath`.`aspath4`,`aspath`.`aspath5`,`aspath`.`aspath6`,`aspath`.`aspath7`,`aspath`.`aspath8`,`peer`.`asn`) AS `aspath`,`SHOW_COMMUNITY`(`community`.`comlen`,`community`.`community1`,`community`.`community2`,`community`.`community3`,`community`.`community4`,`community`.`community5`,`community`.`community6`,`community`.`community7`,`community`.`community8`) AS `community`,`route6`.`valid` AS `valid`,`route6`.`lastupdate` AS `updated`,`route6`.`networkb1` AS `route_networkb1`,`route6`.`networkb2` AS `route_networkb2`,`route6`.`networke1` AS `route_networke1`,`route6`.`networke2` AS `route_networke2`,`route6`.`netmask` AS `route_netmask`,`route6`.`peerid` AS `peer_id`,`route6`.`origin_as` AS `origin_as`,`route6`.`flap_a` AS `flap_a`,`route6`.`flap_w` AS `flap_w`,`aspath`.`aslen` AS `aslen`,`aspath`.`id` AS `aspath_id` from (((`route6` left join `peer` on((`peer`.`id` = `route6`.`peerid`))) left join `aspath` on((`aspath`.`id` = `route6`.`aspathid`))) left join `community` on((`community`.`id` = `route6`.`communityid`))) */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -1899,4 +1784,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-10-31 22:58:43
+-- Dump completed on 2017-11-01  0:40:38
