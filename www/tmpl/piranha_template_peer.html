@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+	<body>
+		<div id="piranha_page_peer">
+			<div class="row">
+				<div class="col-md-12 well lead">Peer status</div>
+			</div>
+			<div class="row">
+				<hr>
+				<div class="col-md-4">
+					<h4>Peer Status</h4>
+					<table class="table table-striped">
+						<tr>
+							<th>Name</th>
+							<td class="piranha_autofill_string piranha_val_descr">n/a</td>
+						</tr>
+						<tr>
+							<th>ASN</th>
+							<td class="piranha_autofill_string piranha_val_asn">n/a</td>
+						</tr>
+						<tr>
+							<th>IP</th>
+							<td class="piranha_autofill_string piranha_val_ip">n/a</td>
+						</tr>
+						<tr>
+							<th>Password</th>
+							<td class="piranha_autofill_string piranha_val_password">n/a</td>
+						</tr>
+						<tr>
+							<th>State</th>
+							<td class="piranha_autofill_string piranha_val_statename">n/a</td>
+						</tr>
+						<tr>
+							<th>Last connect</th>
+							<td class="piranha_autofill_string piranha_val_lastup">never</td>
+						</tr>
+						<tr>
+							<th>Last disconnect</th>
+							<td class="piranha_autofill_string piranha_val_lastdown">never</td>
+						</tr>
+						<tr>
+							<th>Last update</th>
+							<td class="piranha_autofill_string piranha_val_lastupdate">never</td>
+						</tr>
+						<tr>
+							<th>Delay</th>
+							<td class="piranha_autofill_string piranha_val_deltanow">-</td>
+						</tr>
+						<tr>
+							<th>Valid routes</th>
+							<td class="piranha_autofill_string piranha_val_route_valid">-</td>
+						</tr>
+						<tr>
+							<th>Invalid routes</th>
+							<td class="piranha_autofill_string piranha_val_route_invalid">-</td>
+						</tr>
+					</table>
+				</div>
+				<div class="col-md-1"></div>
+				<div class="col-md-7">
+					<h4>Netmask distribution</h4>
+					<div id="piranha_peer_graph_mask"></div>
+				</div>
+			</div>
+			<hr/>
+			<div class="row">
+				<div class="col-md-12">
+					<h4>BGP Updates history</h4>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-1">
+					<div id='piranha_peer_graph_update_btn' class="btn-group-vertical" role="group">
+						<button type="button" class="active btn btn-default btn-sm">1m</button>
+						<button type="button" class="btn btn-default btn-sm">5m</button>
+						<button type="button" class="btn btn-default btn-sm">15m</button>
+						<button type="button" class="btn btn-default btn-sm">1h</button>
+						<button type="button" class="btn btn-default btn-sm">1d</button>
+					</div>
+				</div>
+				<div class="col-md-11">
+					<div id="piranha_peer_graph_update"></div>
+				</div>
+			</div>
+			<div class="row piranha_event">
+				<div class="col-md-3">
+					<h4>BGP Events</h4>
+					<table class="table">
+						<thead>
+							<tr><th>Timestamp</th><th>Event</th></tr>
+						</thead>
+						<tbody>
+							<tr class="piranha_event_row hide">
+								<td class="piranha_autofill piranha_autofill_string piranha_val_timestamp"></td>
+								<td>
+									<div class="piranha_autofill piranha_val_type piranha_autofill_switch piranha_switch_C">
+										<span class="glyphicon glyphicon-link"></span> Connect
+									</div>
+									<div class="piranha_autofill piranha_val_type piranha_autofill_switch piranha_switch_D">
+										<span class="glyphicon glyphicon-off"></span> Disconnect
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<hr/>
+			<div class="row">
+				<div class="col-md-12">
+					<h4>BGP Updates last 100 entries</h4>
+					<p>
+						The 100 most recent updates in the rolling buffer.
+					</p>
+				</div>
+			</div>
+			<div class="piranha_template_routes"></div>
+		</div>
+	</body>
+</html>

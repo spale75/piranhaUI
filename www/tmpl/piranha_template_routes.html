@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+	<body>
+		<div id="piranha_subpage_routes">
+
+			<div class="row">
+				<form>
+					<div class="col-md-2">
+						<span class="lead">Display options</span>
+					</div>
+					<div class="col-md-10">
+						<div class="btn-group" role="group">
+							<div class="btn btn-sm btn-success piranha_route_click" name="peer_ip">Peer IP</div>
+							<div class="btn btn-sm btn-success piranha_route_click" name="peer_asn">Peer ASN</div>
+							<div class="btn btn-sm btn-success piranha_route_click" name="valid">Valid</div>
+							<div class="btn btn-sm btn-success piranha_route_click" name="updated">Updated</div>
+							<div class="btn btn-sm btn-success piranha_route_click" name="prefix">Prefix</div>
+							<div class="btn btn-sm btn-success piranha_route_click" name="aspath">AS Path</div>
+							<div class="btn btn-sm btn-success piranha_route_click" name="community">Communities</div>
+							<div class="btn btn-sm btn-success piranha_route_click" name="flap_a">Announce</div>
+							<div class="btn btn-sm btn-success piranha_route_click" name="flap_w">Withdrawn</div>
+						</div>
+					</div>
+				</form>
+			</div>
+			<hr>
+			<div class="row piranha_routes_results">
+				<div class="col-md-12">
+					<div class="piranha_routes_error alert alert-danger hide" role="alert"></div>
+					<table class="table table-hover table-condensed">
+						<thead>
+							<tr>
+								<th class="piranha_hdr_peer_ip">Peer IP</th>
+								<th class="piranha_hdr_peer_asn">Peer ASN</th>
+								<th class="piranha_hdr_valid">Valid</th>
+								<th class="piranha_hdr_updated">Updated</th>
+								<th class="piranha_hdr_prefix">Prefix</th>
+								<th class="piranha_hdr_aspath">AS Path</th>
+								<th class="piranha_hdr_community">Communities</th>
+								<th class="piranha_hdr_flap_a">Announce(s)</th>
+								<th class="piranha_hdr_flap_w">Withdrawn(s)</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr class="piranha_routes_row hide">
+								<td class="piranha_autofill_string piranha_val_peer_ip">n/a</td>
+								<td class="piranha_autofill_string piranha_val_peer_asn">n/a</td>
+								<td class="piranha_val_valid">
+									<div class="piranha_autofill_bool piranha_val_valid btn disabled btn-success btn-xs">
+										<span class="glyphicon glyphicon-ok"></span>
+									</div>
+									<div class="piranha_autofill_rbool piranha_val_valid btn disabled btn-danger btn-xs">
+										<span class="glyphicon glyphicon-remove"></span>
+									</div>
+								</td>
+								<td class="piranha_autofill_string piranha_val_updated text-nowrap">n/a</td>
+								<td class="piranha_autofill_string piranha_val_prefix">n/a</td>
+								<td class="piranha_autofill_string piranha_val_aspath">n/a</td>
+								<td class="piranha_autofill_string piranha_val_community">n/a</td>
+								<td class="piranha_autofill_string piranha_val_flap_a text-right">n/a</td>
+								<td class="piranha_autofill_string piranha_val_flap_w text-right">n/a</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="row piranha_routes_pager">
+				<div class="col-md-12 text-center">
+					<div class="btn-group" role="group">
+						<div class="btn btn-default piranha_route_move piranha_route_move_first">
+							<span class="glyphicon glyphicon-backward"></span>
+						</div>
+						<div class="btn btn-default piranha_route_move piranha_route_move_prev">
+							<span class="glyphicon glyphicon-chevron-left"></span>
+						</div>
+						<div class="btn btn-default piranha_route_move piranha_route_move_next">
+							<span class="glyphicon glyphicon-chevron-right"></span>
+						</div>
+						<div class="btn btn-default piranha_route_move piranha_route_move_last">
+							<span class="glyphicon glyphicon-forward"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

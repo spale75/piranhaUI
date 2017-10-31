@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+	<body>
+		<div id="piranha_page_dashboard">
+
+			<div class="row">
+				<div class="col-md-12 well lead">Global statistics</div>
+			</div>
+			<div class="row">
+				<div class="col-md-5">
+					<table class="table table-condensed table-striped">
+						<tr>
+							<th>Number of peers</th>
+							<td class="text-right piranha_autofill_string piranha_val_peers">n/a</td>
+						</tr>
+						<tr>
+							<th>Number of peers UP</th>
+							<td class="text-right piranha_autofill_string piranha_val_peers_up">n/a</td>
+						</tr>
+						<tr>
+							<th>Number of peers DOWN</th>
+							<td class="text-right piranha_autofill_string piranha_val_peers_down">n/a</td>
+						</tr>
+						<tr>
+							<th>IPv4 Routes (valid)</th>
+							<td class="text-right piranha_autofill_string piranha_val_ipv4_valid">n/a</td>
+						</tr>
+						<tr>
+							<th>IPv4 Routes (invalid)</th>
+							<td class="text-right piranha_autofill_string piranha_val_ipv4_invalid">n/a</td>
+						</tr>
+						<tr>
+							<th>IPv6 Routes (valid)</th>
+							<td class="text-right piranha_autofill_string piranha_val_ipv6_valid">n/a</td>
+						</tr>
+						<tr>
+							<th>IPv6 Routes (invalid)</th>
+							<td class="text-right piranha_autofill_string piranha_val_ipv6_invalid">n/a</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<hr/>
+			<div class="row">
+				<div class="col-md-12 lead">Netmask distribution: by number of routes</div>
+			</div>
+			<div class="row">
+				<div class="col-md-5 lead">IPv4</div>
+				<div class="col-md-2"></div>
+				<div class="col-md-5 lead">IPv6</div>
+			</div>
+			<div class="row">
+				<div class="col-md-5">
+					<div id="piranha_graph_ipv4"></div>
+				</div>
+				<div class="col-md-2"></div>
+				<div class="col-md-5">
+					<div id="piranha_graph_ipv6"></div>
+				</div>
+			</div>
+			<hr/>
+			<div class="row">
+				<div class="col-md-12 lead">Netmask distribution: by subnet size</div>
+			</div>
+			<div class="row">
+				<div class="col-md-5 lead">IPv4</div>
+				<div class="col-md-2"></div>
+				<div class="col-md-5 lead">IPv6</div>
+			</div>
+			<div class="row">
+				<div class="col-md-5">
+					<div id="piranha_graph_ipv4_pond"></div>
+				</div>
+				<div class="col-md-2"></div>
+				<div class="col-md-5">
+					<div id="piranha_graph_ipv6_pond"></div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

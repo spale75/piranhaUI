@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+	<body>
+		<div id="piranha_page_lookup">
+			<div class="row">
+				<div class="col-md-12 well lead">Database Lookup Tools</div>
+			</div>
+			<div class="row">
+				<hr>
+				<div class="col-md-7">
+					<div class="row">
+						<div class="col-md-4 lead">
+							Filter peers
+						</div>
+						<div class="col-md-7">
+							<select class="form-control piranha_peer_select hide">
+								<option value="0">All peers</option>
+							</select>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-4 lead">
+						Search a prefix
+						</div>
+						<div class="col-md-7">
+							<div class="row">
+								<form class="form-inline piranha_form_prefix">
+									<input type="text" class="form-control piranha_search_input" placeholder="192.168.0.0">
+									<button type="button" class="btn btn-default btn-primary">Search</button>
+								</form>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-4 lead">
+						Search origin AS
+						</div>
+						<div class="col-md-7">
+							<div class="row">
+								<form class="form-inline piranha_form_originas">
+									<input type="text" class="form-control piranha_search_input" placeholder="23456">
+									<div class="btn-group" role="group" aria-label="...">
+										<button type="button" name="ipv4" class="btn btn-default active btn-warning">IPv4</button>
+										<button type="button" name="ipv6" class="btn btn-default">IPv6</button>
+									</div>
+									<button type="button" class="btn btn-default btn-primary">Search</button>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-5">
+					<span class="lead">Input help</span>
+					<table class="table">
+						<tr>
+							<td>
+								<strong><code>address</code></strong>
+								<p>
+									Search for any prefix the IP belongs to,
+									no matter the netmask.
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<strong><code>address/netmask</code></strong>
+								<p>
+									Search for <strong>exact match</strong> prefixes.
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<strong><code>address/netmask-netmask</code></strong>
+								<p>
+									Same as <strong><code>address</code></strong>
+									but restrict the search to the range of given
+									netmasks.
+								</p>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+
+			<div class="piranha_template_routes"></div>
+		</div>
+	</body>
+</html>

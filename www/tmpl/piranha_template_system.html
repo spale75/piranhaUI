@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+	<body>
+		<div id="piranha_page_system">
+			<div class="row">
+				<div class="col-md-12 well lead">System config</div>
+			</div>
+			<div class="row">
+				<div class="col-md-2">
+					<strong>Rolling Buffer size</strong>
+				</div>
+				<div class="col-md-2">
+					<span class="piranha_autofill_string piranha_val_buffer_max"></span>
+				</div>
+				<div class="col-md-8">
+					<p>
+						A rolling buffer is used to keep track of the last n BGP updates received by the system.
+						This is different from the tables keeping the routing table. The rolling buffer will keep
+						any update which the routing table will get overwritten by updates for the same prefix.
+					</p>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

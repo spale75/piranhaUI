@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="Piranha UI">
+		<meta name="author" content="Pascal Gloor">
+
+
+		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+		<link rel="manifest" href="/manifest.json">
+		<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+		<meta name="theme-color" content="#ffffff">
+
+		<title>Piranha: where all the fishy routes meet...</title>
+
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link href="css/ie10-viewport-bug-workaround.css" rel="stylesheet">
+		<link href="css/morris.css" rel="stylesheet">
+		<link href="css/vis.css" rel="stylesheet">
+		<link href="css/bootstrap-select.css" rel="stylesheet">
+		<link href="css/piranha.css" rel="stylesheet">
+		<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+			<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="container">
+			<div id="piranha_modal_help" class="modal fade" tabindex="-1" role="dialog">
+				<div class="modal-dialog modal-lg" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+							<h4 class="modal-title">Piranha Help</h4>
+						</div>
+						<div class="modal-body">
+							<ul class="nav nav-tabs" role="tablist">
+								<li role="presentation" class="active">
+									<a href="#piranha_help_about" aria-controls="piranha_help_about"
+										role="tab" data-toggle="tab">About</a>
+								</li>
+								<li role="presentation"><a href="#piranha_help_dashboard"
+										aria-controls="piranha_help_dashboard" role="tab"
+										data-toggle="tab">Dashboard</a>
+								</li>
+								<li role="presentation"><a href="#piranha_help_peers"
+									aria-controls="piranha_help_peers" role="tab" data-toggle="tab">Peers</a>
+								</li>
+								<li role="presentation"><a href="#piranha_help_lookup"
+									aria-controls="piranha_help_lookup" role="tab" data-toggle="tab">Database</a>
+								</li>
+							</ul>
+							<div class="tab-content">
+								<div role="tabpanel" class="tab-pane active" id="piranha_help_about">
+									<h4>Piranha</h4>
+									<p>
+										is a BGP daemon written in C that can collect BGP routing tables
+										from various peers. It supports modern BGP4 protocol features as
+										IPv6, 4 octets ASN and extended communities.
+									</p>
+								</div>
+								<div role="tabpanel" class="tab-pane" id="piranha_help_dashboard">
+									<h4>Dashboard help</h4>
+									<table class="table">
+										<tr>
+											<th>Number of peers</th>
+											<td>The number of peers as configured in the database.</td>
+										</tr>
+										<tr>
+											<th>Number of peers UP</th>
+											<td>The number of connected peers.</td>
+										</tr>
+										<tr>
+											<th>Number of peers DOWN</th>
+											<td>The number of configured peers that are not connected.</td>
+										</tr>
+										<tr>
+											<th>IPv4 Routes (valid)</th>
+											<td>Total number of active IPv4 routes across all peers.</td>
+										</tr>
+										<tr>
+											<th>IPv4 Routes (invalid)</th>
+											<td>Total number of withdrawn IPv4 routes in the database.</td>
+										</tr>
+										<tr>
+											<th>IPv6 Routes (valid)</th>
+											<td>Total number of active IPv6 routes across all peers.</td>
+										</tr>
+										<tr>
+											<th>IPv6 Routes (invalid)</th>
+											<td>Total number of withdrawn IPv6 routes in the database.</td>
+										</tr>
+										<tr>
+											<th>Netmask distribution: by number of routes</th>
+											<td>
+												Presence of a certain prefix length compared to all other routes,
+												expressed in percent. In other words SUM(mask)/SUM(all_routes).
+											</td>
+										</tr>
+										<tr>
+											<th>Netmask distribution: by subnet size</th>
+											<td>
+												Same as above but weighted by the number of IPs each netmask
+												represents.
+											</td>
+										</tr>
+									</table>
+								</div>
+								<div role="tabpanel" class="tab-pane" id="piranha_help_peers">
+									<h4>Peers help</h4>
+									<p>
+									</p>
+								</div>
+								<div role="tabpanel" class="tab-pane" id="piranha_help_lookup">
+									<h4>Lookup help</h4>
+									<p>
+									</p>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="container">
+			<nav class="navbar navbar-default navbar-fixed-top">
+				<div class="container">
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+							data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+							<span class="sr-only">Toggle navigation</span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+						</button>
+						<a class="navbar-brand" href="#">
+							<img alt="Piranha" height="20" width="40" src="img/piranha.png">
+						</a>
+					</div>
+					<div id="navbar" class="navbar-collapse collapse piranha_navbar">
+						<ul class="nav navbar-nav piranha_navbar_links">
+							<li><a href="#about">About</a></li>
+							<li><a href="#dashboard">Dashboard</a></li>
+							<li><a href="#status">Status</a></li>
+							<li class="dropdown">
+								<a href="#peer" class="dropdown-toggle" data-toggle="dropdown" role="button"
+									aria-haspopup="true" aria-expanded="false">Peers <span class="caret"></span>
+								</a>
+								<ul class="dropdown-menu">
+									<li class="piranha_navbar_peer_template hide"><a href="#"></a></li>
+								</ul>
+							</li>
+							<li><a href="#top100">Top 100</a></li>
+							<li><a href="#lookup">Lookup</a></li>
+							<li class="dropdown">
+								<a href="#vis" class="dropdown-toggle" data-toggle="dropdown" role="button"
+									aria-haspopup="true" aria-expanded="false">Visualisation <span class="caret"></span>
+								</a>
+								<ul class="dropdown-menu">
+									<li><a href="#vis/demo3d">Demo 3D</a></li>
+									<li><a href="#vis/bgp_updates">BGP Updates</a></li>
+								</ul>
+							</li>
+						</ul>
+						<ul class="nav navbar-nav navbar-right">
+							<li><a href="#test">Dev Page</a></li>
+							<li><a href="#system">System</a></li>
+							<li>
+								<a onclick="window.location.reload()" href="javascript:void(0);">
+									<span class="glyphicon glyphicon-refresh"></span>
+								</a>
+							</li>
+							<li>
+								<a onclick="$('#piranha_modal_help').modal();" href="javascript:void(0);">
+									<span class="glyphicon glyphicon-question-sign"></span>
+								</a>
+							</li>
+						</ul>
+					</div><!--/.nav-collapse -->
+				</div>
+			</nav>
+		</div>
+
+		<div id="piranha_body" class="container"></div>
+
+		<div class="container">
+			<nav class="navbar navbar-default navbar-fixed-bottom">
+				<div class="container">
+					<div class="collapse navbar-collapse">
+						<ul class="nav navbar-nav piranha_footer_default">
+							<li>
+								<a class="text-muted">
+									Click on any ASN and information about it will appear here.
+								</a>
+							</li>
+						</ul>
+						<ul class="nav navbar-nav hide piranha_footer_scroll">
+							<li>
+								<a href="javascript:void(0);" class="piranha_footer_clear">
+									<span class="glyphicon glyphicon-remove">
+								</a>
+							</li>
+							<li>
+								<a href="javascript:void(0);" class="piranha_footer_scroll_back">
+									<span class="glyphicon glyphicon-chevron-left">
+								</a>
+							</li>
+							<li>
+								<a>
+									<span class="piranha_autofill_string piranha_val_cur"
+									>0</span>/<span class="piranha_autofill_string piranha_val_total">0</span>
+								</a>
+							</li>
+							<li>
+								<a href="javascript:void(0);" class="piranha_footer_scroll_fwd">
+									<span class="glyphicon glyphicon-chevron-right">
+								</a>
+							</li>
+							<li>
+								<a>AS<span class="piranha_autofill_string piranha_val_autnum"></span></a>
+							</li>
+							<li>
+								<a>
+									<span class="danger piranha_autofill_string piranha_val_error"></span>
+								</a>
+							</li>
+						</ul>
+						<ul class="nav navbar-nav hide piranha_template_footer">
+							<li><a class="piranha_autofill_string piranha_val_fn"></a></li>
+							<li><a class="piranha_autofill_string piranha_val_adr"></a></li>
+							<li><a class="piranha_autofill_string piranha_val_email"></a></li>
+							<li><a class="piranha_autofill_string piranha_val_tel"></a></li>
+						</ul>
+					</div>
+				</div>
+			</nav>
+		</div>
+
+		<div id="piranha_loading">
+			<div id="piranha_loading_spin"></div>
+		</div>
+
+		<div class="piranha_bottom_space"></div>
+	</body>
+</html>
+		<script src="js/jquery.js"></script>
+		<script src="js/bootstrap.js"></script>
+		<script src="js/raphael.min.js"></script>
+		<script src="js/morris.js"></script>
+		<script src="js/spin.js"></script>
+		<script src="js/vis.js"></script>
+		<script src="js/bootstrap-select.js"></script>
+		<script src="js/piranha.js"></script>
+		<script src="js/ie10-viewport-bug-workaround.js"></script>
+	</body>
+</html>

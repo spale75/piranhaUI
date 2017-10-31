@@ -1,0 +1,43 @@
+body {
+	padding-top: 70px;
+
+    background-image: url('../img/piranha_bg.png');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center; 
+}
+
+.piranha_bottom_space {
+	height: 100px;
+}
+
+#piranha_loading {
+	background: #FFFFFFEE;
+	color: #666666;
+	position: fixed;
+	height: 100%;
+	width: 100%;
+	z-index: 5000;
+	top: 0;
+	left: 0;
+	float: left;
+	text-align: center;
+	padding-top: 10%;
+}
+
+#piranha_graph_ipv4 {
+	height: 300px;
+}
+
+#piranha_graph_ipv6 {
+	height: 300px;
+}
+
+.modal-dialog{
+	overflow-y: initial !important
+}
+.modal-body{
+	height: 400px;
+	overflow-y: auto;
+}
+

@@ -1,0 +1,9 @@
+[mysqld]
+max_heap_table_size=134217728
+tmp_table_size=134217728
+long_query_time=1
+slow_query_log=1
+query_cache_type=1
+query_cache_size=134217728
+myisam_use_mmap=ON
+key_buffer_size=134217728

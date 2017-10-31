@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+	<body>
+		<div id="piranha_page_top100">
+			<form>
+				<div class="row">
+					<div class="col-md-12 well lead">Top 100</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12">
+						<p class="lead">Search options</p>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-3">
+						<select name="query" class="form-control selectpicker">
+							<option value="">Select a Top 100 list</option>
+							<option value="flaps">Top 100 Flapping routes</option>
+							<option value="long_aspath">Top 100 Longest AS paths</option>
+							<option value="invalid_asn">Top 100 Invalid ASN</option>
+						</select>
+					</div>
+					<div class="col-md-3">
+						<select class="form-control piranha_peer_select hide">
+							<option value="0">All peers</option>
+						</select>
+					</div>
+				</div>
+				<hr/>
+				<div class="row">
+					<div class="col-md-2">
+						<div class="btn-group" role="group" aria-label="...">
+							<button type="button" name="ipv4" class="btn btn-default active btn-warning">IPv4</button>
+							<button type="button" name="ipv6" class="btn btn-default">IPv6</button>
+						</div>
+					</div>
+					<div class="col-md-3">
+							<div class="btn-group" role="group" aria-label="...">
+								<button type="button" name="valid_dual" class="btn btn-default active btn-warning">All</button>
+								<button type="button" name="valid_on" class="btn btn-default">Only valid</button>
+								<button type="button" name="valid_off" class="btn btn-default">Only invalid</button>
+							</div>
+					</div>
+				</div>
+				<hr>
+				<div class="piranha_template_routes"></div>
+			</form>
+		</div>
+	</body>
+</html>

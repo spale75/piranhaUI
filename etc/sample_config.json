@@ -1,0 +1,9 @@
+{
+	"sql": {
+		"user": "piranha",
+		"pass": "ChangeMe",
+		"base": "piranha",
+		"host": "localhost"
+	},
+	"piranha": "/opt/piranha",
+}
