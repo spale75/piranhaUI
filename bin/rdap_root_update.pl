@@ -118,7 +118,7 @@ sub process_rdap {
 			sqlquery($dbh,"
 				REPLACE INTO rdap_root_ip4
 				SET
-					prefix   = inet_aton(?),
+					networkb = inet_aton(?),
 					netmask  = ?,
 					rir      = 'iana',
 					descr    = ?", split(/\//,$x->[0]), $x->[1]);
@@ -127,13 +127,15 @@ sub process_rdap {
 	}
 	elsif ( $type eq 'ip6' ) {
 		foreach my $x ( @{$rdap{$type}{special}} ) {
+			my($net,$mask) = split(/\//,$x->[0]);
 			sqlquery($dbh,"
 				REPLACE INTO rdap_root_ip6
 				SET
-					prefix   = CONV(HEX(LEFT(inet6_aton(?),8)),16,10),
-					netmask  = ?,
-					rir      = 'iana',
-					descr    = ?", split(/\//,$x->[0]), $x->[1]);
+					networkb1 = CONV(HEX(LEFT(inet6_aton(?),8)),16,10),
+					networkb2 = CONV(HEX(RIGHT(inet6_aton(?),8)),16,10),
+					netmask   = ?,
+					rir       = 'iana',
+					descr     = ?", $net, $net, $mask, $x->[1]);
 			$cnt++;
 		}
 	}
@@ -184,7 +186,7 @@ sub process_rdap {
 				sqlquery($dbh, "
 					REPLACE INTO rdap_root_ip4
 					SET
-						prefix   = inet_aton(?),
+						networkb = inet_aton(?),
 						netmask  = ?,
 						rir      = ?,
 						rdap     = ?,
@@ -200,11 +202,12 @@ sub process_rdap {
 				sqlquery($dbh, "
 					REPLACE INTO rdap_root_ip6
 					SET
-						prefix   = CONV(HEX(LEFT(inet6_aton(?),8)),16,10),
+						networkb1 = CONV(HEX(LEFT(inet6_aton(?),8)),16,10),
+						networkb2 = CONV(HEX(RIGHT(inet6_aton(?),8)),16,10),
 						netmask  = ?,
 						rir      = ?,
 						rdap     = ?,
-						rdaps    = ?", $prefix, $netmask, $rir, $rdap, $rdaps);
+						rdaps    = ?", $prefix, $prefix, $netmask, $rir, $rdap, $rdaps);
 				$cnt++;
 			}
 		}

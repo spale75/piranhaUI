@@ -44,9 +44,9 @@ my %conf = (
 			func => \&mode_graph,
 			dep => [ 'peerid', 'modulo' ],
 		},
-		'asinfo' => {
-			func => \&mode_asinfo,
-			dep  => [ 'asn' ],
+		'rdap' => {
+			func => \&mode_rdap,
+			dep  => [ 'rdaptype', 'rdapdata' ],
 		},
 		'config' => {
 			func => \&mode_config,
@@ -82,6 +82,8 @@ my %conf = (
 		pagesize => '^\d+$',
 		page     => '^\d+$',
 		prefix   => '^[0-9a-fA-F:\.\/\-]*$',
+		rdaptype => '^(asn|ip4|ip6)$',
+		rdapdata => '^(\d+|\d+\.\d+\.\d+\.\d+(/\d+)?|[0-9a-fA-F:]+(/\d+)?)$'
 	},
 	logfile => '../../var/cgi_sql.log',
 
@@ -321,24 +323,59 @@ sub mode_graph {
 	return $j;
 }
 
-sub mode_asinfo {
+sub mode_rdap {
 	my ($dbh, $var) = @_;
 	my $j = { };
 
-	my $q = sqlquery($dbh, "SELECT json FROM rdap_cache_asn WHERE asn = ?", $var->{asn});
+
+	my %query = (
+		'asn' => '
+			SELECT rir,rdap,rdaps,descr
+			FROM rdap_root_asn
+			WHERE ? BETWEEN as_begin AND as_end
+			ORDER BY size DESC LIMIT 1',
+		'ip4' => '
+			SELECT rir,rdap,rdaps,descr
+			FROM rdap_root_ip4
+			WHERE INET_ATON(?) BETWEEN networkb AND networke
+			ORDER BY netmask DESC LIMIT 1',
+		'ip6' => '
+			SELECT rir,rdap,rdaps,descr
+			FROM rdap_root_ip6
+			WHERE CONV(HEX(LEFT(INET6_ATON(?),8)),16,10) BETWEEN networkb1 AND networke1
+			AND   CONV(HEX(RIGHT(INET6_ATON(?),8)),16,10) BETWEEN networkb2 AND networke2
+			ORDER BY netmask DESC LIMIT 1',
+	);
+
+	my %objtype = (
+		'asn' => 'autnum',
+		'ip4' => 'ip',
+		'ip6' => 'ip',
+	);
+
+	my $q = sqlquery($dbh, "SELECT value FROM rdap_cache WHERE name = ?", $var->{rdapdata});
 	my($r) = $q->fetchrow_array();
 
 	if ( !defined $r ) {
-		$q = sqlquery($dbh, "SELECT rir,rdap,rdaps,descr FROM rdap_root_asn WHERE ? BETWEEN as_begin AND as_end", $var->{asn});
+
+		my $x = $var->{rdapdata};
+		$x =~ s/\/.*//;
+
+		my @args = ( $x );
+		push @args, $x if $var->{rdaptype} eq 'ip6';
+
+		$q = sqlquery($dbh, $query{$var->{rdaptype}}, @args);
 		my ($rir,$rdap,$rdaps,$descr) = $q->fetchrow_array();
 
 		$rdap = $rdaps if defined $rdaps;
 
 		if ( defined $descr ) {
-			$j->{error} = "IANA defined special ASN: " . $descr;
+			$j->{error} = "IANA Special: " . $descr;
 		} elsif ( defined $rdap ) {
 			$r = '';
-			open(RDAP,"wget -q -O- $rdap/autnum/$var->{asn} |");
+			my $url = sprintf("'%s/%s/%s'", $rdap, $objtype{$var->{rdaptype}}, $var->{rdapdata});
+			print "DEBUG $url\n";
+			open(RDAP,"wget -q -O- $url |");
 			while(<RDAP>) { $r .= $_; }
 			close(RDAP);
 
@@ -346,14 +383,18 @@ sub mode_asinfo {
 				$j->{error} = "AS not found in RDAP server ($rir)";
 			}
 			else {
-				sqlquery($dbh,"REPLACE INTO rdap_cache_asn SET asn = ?, json = ?, valid = FROM_UNIXTIME(?)", $var->{asn}, $r, time() + ( 7 * 86400 ));
+				sqlquery($dbh,"REPLACE INTO rdap_cache SET name = ?, value = ?, valid = FROM_UNIXTIME(?)",
+					$var->{rdapdata}, $r, time() + ( 7 * 86400 ));
 			}
 		}
 	}
+	else {
+		$j->{rdap} = $r;
+	}
 
-	if ( defined $r && $r ne '' ) {
-		$q = sqlquery($dbh, "SELECT json FROM rdap_cache_asn WHERE asn = ?", $var->{asn});
-		$j->{asinfo} = $q->fetchrow_array();
+	if ( ! exists $j->{rdap} ) {
+		$q = sqlquery($dbh, "SELECT value FROM rdap_cache WHERE name = ?", $var->{rdapdata});
+		$j->{rdap} = $q->fetchrow_array();
 	}
 
 	return $j;
