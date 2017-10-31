@@ -912,7 +912,7 @@ var piranha = {
 					'autnum' : asn
 				});
 		
-			$.getJSON(piranha.helper.url(piranha.conf.cgi, { "mode": "asinfo", "asn": asn }))
+			$.getJSON(piranha.helper.url(piranha.conf.cgi, { "mode": "rdap", "rdaptype": "asn", "rdapdata": asn }))
 			.done(function(d) {
 		
 				var vcard = [ ];
@@ -937,8 +937,8 @@ var piranha = {
 					return y;
 				};
 		
-				if ( 'asinfo' in d ) {
-					var v = grab_vcard(d.asinfo);
+				if ( 'rdap' in d ) {
+					var v = grab_vcard(d.rdap);
 					var unique = { };
 		
 					$.each(v, function(idx, vc) {

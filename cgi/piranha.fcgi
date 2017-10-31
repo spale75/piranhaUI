@@ -374,7 +374,6 @@ sub mode_rdap {
 		} elsif ( defined $rdap ) {
 			$r = '';
 			my $url = sprintf("'%s/%s/%s'", $rdap, $objtype{$var->{rdaptype}}, $var->{rdapdata});
-			print "DEBUG $url\n";
 			open(RDAP,"wget -q -O- $url |");
 			while(<RDAP>) { $r .= $_; }
 			close(RDAP);
@@ -394,7 +393,11 @@ sub mode_rdap {
 
 	if ( ! exists $j->{rdap} ) {
 		$q = sqlquery($dbh, "SELECT value FROM rdap_cache WHERE name = ?", $var->{rdapdata});
-		$j->{rdap} = $q->fetchrow_array();
+		($r) = $q->fetchrow_array();
+	}
+
+	if ( defined $r ) {
+		$j->{rdap} = from_json($r);
 	}
 
 	return $j;
