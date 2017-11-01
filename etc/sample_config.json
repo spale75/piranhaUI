@@ -5,5 +5,5 @@
 		"base": "piranha",
 		"host": "localhost"
 	},
-	"piranha": "/opt/piranha",
+	"piranha": "/opt/piranha"
 }
