@@ -245,7 +245,7 @@ sub mode_peer_last {
 				show_community(c.comlen,
 					c.community1, c.community2, c.community3, c.community4,
 					c.community5, c.community6, c.community7, c.community8) AS community,
-				nexthop.nexthop AS nexthop,
+				n.nexthop AS nexthop,
 				IF(msg='A',1,0) AS valid,
 				timestamp AS updated,
 				NULL AS flap_a,
@@ -254,7 +254,7 @@ sub mode_peer_last {
 				$buf AS b
 					LEFT JOIN aspath a ON a.id = b.aspathid
 					LEFT JOIN community c ON c.id = b.communityid
-					LEFT JOIN nextop n ON n.id = b.nexthopid
+					LEFT JOIN nexthop n ON n.id = b.nexthopid
 			ORDER BY
 				timestamp DESC, pos
 			LIMIT ?,?", $p->{asn}, $var->{page} * $var->{pagesize}, $var->{pagesize} );
