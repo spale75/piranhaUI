@@ -8,10 +8,11 @@
 					<div class="col-md-2">
 						<span class="lead">Display options</span>
 					</div>
-					<div class="col-md-10">
+					<div class="col-md-10 piranha_routes_btn">
 						<div class="btn-group" role="group">
 							<div class="btn btn-sm btn-success piranha_route_click" name="peer_ip">Peer IP</div>
 							<div class="btn btn-sm btn-success piranha_route_click" name="peer_asn">Peer ASN</div>
+							<div class="btn btn-sm btn-success piranha_route_click" name="nexthop">Nexthop</div>
 							<div class="btn btn-sm btn-success piranha_route_click" name="valid">Valid</div>
 							<div class="btn btn-sm btn-success piranha_route_click" name="updated">Updated</div>
 							<div class="btn btn-sm btn-success piranha_route_click" name="prefix">Prefix</div>
@@ -32,6 +33,7 @@
 							<tr>
 								<th class="piranha_hdr_peer_ip">Peer IP</th>
 								<th class="piranha_hdr_peer_asn">Peer ASN</th>
+								<th class="piranha_hdr_nexthop">Nexthop</th>
 								<th class="piranha_hdr_valid">Valid</th>
 								<th class="piranha_hdr_updated">Updated</th>
 								<th class="piranha_hdr_prefix">Prefix</th>
@@ -45,6 +47,7 @@
 							<tr class="piranha_routes_row hide">
 								<td class="piranha_autofill_string piranha_val_peer_ip">n/a</td>
 								<td class="piranha_autofill_string piranha_val_peer_asn">n/a</td>
+								<td class="piranha_autofill_string piranha_val_nexthop">n/a</td>
 								<td class="piranha_val_valid">
 									<div class="piranha_autofill_bool piranha_val_valid btn disabled btn-success btn-xs">
 										<span class="glyphicon glyphicon-ok"></span>

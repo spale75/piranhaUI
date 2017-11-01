@@ -191,7 +191,6 @@ var piranha = {
 
 				});
 				var spick = $('.piranha_peer_select').clone().removeClass('hide piranha_peer_select');
-				console.log(spick);
 				$('.piranha_peer_select').parent().append(spick);
 				$(spick).attr('name','peerid');
 				$(spick).selectpicker();
@@ -358,12 +357,8 @@ var piranha = {
 						);
 					});
 
-					piranha.auto.routes.init({ "mode": "peer_last", "peerid": peerid, "pagesize": 100, "page": 0 }, "route");
-
-					$('div[name="peer_ip"]').trigger('click');
-					$('div[name="peer_asn"]').trigger('click');
-					$('div[name="flap_a"]').trigger('click');
-					$('div[name="flap_w"]').trigger('click');
+					piranha.auto.routes.init({ "mode": "peer_last", "peerid": peerid, "pagesize": 100, "page": 0 },
+						"route", "hide_nexthop:hide_peer_ip:hide_peer_asn:hide_flap_a:hide_flap_w");
 			
 					piranha.spinner(0);
 				})
@@ -438,6 +433,8 @@ var piranha = {
 				if ( qs.list == 'flaps' )
 					opt = 'nonav';
 
+				opt += ":hide_nexthop:hide_community";
+
 				piranha.auto.routes.init(qs, 'route', opt);
 			},
 		},
@@ -482,7 +479,7 @@ var piranha = {
 					"peerid": peerid,
 					"pagesize": 100,
 					"page": 0
-					}, 'route');
+					}, 'route', "hide_nexthop");
 			},
 			
 			"prefix": function(e) {
@@ -500,7 +497,7 @@ var piranha = {
 					"peerid": peerid,
 					"pagesize": 100,
 					"page": 0
-					}, 'route');
+					}, 'route', "hide_nexthop");
 			},
 		},
 		"vis": {
@@ -738,14 +735,19 @@ var piranha = {
 
 				if ( opt ) {
 					var os = opt.split(':');
+					piranha.auto.routes.colreset();
 					for(var i=0; i<os.length; i++) {
-						switch(os[i]) {
-							case "nonav":
-								$('.piranha_routes_pager').hide();
-								break;
-							case "nav":
-								$('.piranha_routes_pager').show();
-								break;
+						if ( os[i] == 'nonav' ) {
+							$('.piranha_routes_pager').hide();
+						}
+						else if ( os[i] == 'nav' ) {
+							$('.piranha_routes_pager').show();
+						}
+						else {
+							var re = os[i].match(/^hide_(.*)$/);
+							if ( re ) {
+								$('div[name="'+re[1]+'"]').trigger('click');
+							}
 						}
 					}
 				}
@@ -808,6 +810,11 @@ var piranha = {
 				.fail(function(jqxhr, textStatus, error) {
 					var err = textStatus + ": " + error;
 					console.log( "Request Failed: " + err );
+				});
+			},
+			"colreset": function() {
+				$.each($('.piranha_routes_btn').find('div.piranha_route_click.disabled'), function(id, btn) {
+					$(btn).click();
 				});
 			},
 			"colclick": function(btn) {
