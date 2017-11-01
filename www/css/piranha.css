@@ -33,6 +33,10 @@ body {
 	height: 300px;
 }
 
+.piranha_footer nav {
+	background-color: #DEECF6;
+}
+
 .modal-dialog{
 	overflow-y: initial !important
 }

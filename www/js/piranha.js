@@ -16,31 +16,6 @@
 
 var piranha = {
 
-// Structure
-// "conf"
-// "init"
-// "gettemplate"
-// "spinner"
-// "loadpage"
-// "pageevent"
-// "page"
-//  "dashboard"
-//  "status"
-//  "peer"
-//  "top100"
-//  "lookup"
-//  "system"
-// "helper"
-//  "easynum"
-//  "url"
-// "autofill"
-// "morris"
-//  "mask"
-//  "peer_mask"
-//  "peer_update"
-// "asinfo"
-
-
 	"conf": {
 		"cgi": "cgi/piranha.fcgi",
 		"pages": [
@@ -83,6 +58,19 @@ var piranha = {
 			"position"  : 'absolute',
 		},
 	},
+
+	"re": function(str, set) {
+
+		switch(set) {
+			// Don't overcomplicate things ...
+			case "asn"   : return str.match(/^\d{1,10}$/);
+			case "aspath": return str.match(/^\d{1,10}( \d{1,10})*$/);
+			// CIDR IPv4/IPv6 regex from regexpal.com
+			case "ip4"   : return str.match(/^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$/);
+			case "ip6"   : return str.match(/^s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?s*(\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?$/);
+		}
+		return null;
+	},
 	
 	"init": function() {
 
@@ -103,8 +91,8 @@ var piranha = {
 			piranha.auto.routes.update(this);
 		});
 
-		$('body').on('click', 'a.piranha_asinfo_click', function() {
-			piranha.asinfo.lookup(this);
+		$('body').on('click', 'a.piranha_footinfo_click', function() {
+			piranha.footinfo.lookup(this);
 		});
 
 		$('body').on('click', 'div.piranha_vis_proto', function() {
@@ -116,9 +104,9 @@ var piranha = {
 		});
 
 		// register footer functions
-		$('.piranha_footer_clear').click(this.asinfo.clear);
-		$('.piranha_footer_scroll_back').click(this.asinfo.scroll_back);
-		$('.piranha_footer_scroll_fwd').click(this.asinfo.scroll_fwd);
+		$('.piranha_footer_clear').click(this.footinfo.clear);
+		$('.piranha_footer_scroll_back').click(this.footinfo.scroll_back);
+		$('.piranha_footer_scroll_fwd').click(this.footinfo.scroll_fwd);
 
 		piranha.helper.resize();
 
@@ -697,14 +685,18 @@ var piranha = {
 
 					$(obj).find('.piranha_val_'+path+name).each(function(index) {
 						if ( $(this).hasClass("piranha_autofill_string") ) {
-							if ( name.match(/(asn?|aspath)$/) ) {
+							if ( name.match(/(asn?|aspath)$/) && piranha.re(val,'aspath') ) {
 								var s = val.split(' ');
 								var all = '';
 								for(var i=0; i<s.length; i++) {
-									all += ' <a href="javascript:void(0)" class="piranha_asinfo_click">' + s[i] + '</a>';
+									all += ' <a href="javascript:void(0)" class="piranha_footinfo_click">' + s[i] + '</a>';
 								};
 								val = all;
 							}
+							else if ( piranha.re(val,'ip4') || piranha.re(val, 'ip6') ) {
+								val = '<a href="javascript:void(0)" class="piranha_footinfo_click">' + val + '</a>';
+							}
+				
 							$(this).html(val);
 						}
 						else if ( $(this).hasClass("piranha_autofill_bool") ) {
@@ -904,22 +896,33 @@ var piranha = {
 			});
 		},
 	},
-	"asinfo": {
+	"footinfo": {
 
 		"lookup": function(btn) {
 
-			var asn = $(btn).html();
+			var rdapdata = $(btn).html();
+			var rdaptype = 'asn';
+
+			if ( piranha.re(rdapdata, 'ip4') ) {
+				rdaptype = 'ip4';
+			}
+			else if ( piranha.re(rdapdata, 'ip6') ) {
+				rdaptype = 'ip6';
+			}
 			
 			$('.piranha_template_footer:not(:first)').remove();
+			$('.piranha_footer').fadeIn();
 		
 			piranha.autofill($('.piranha_footer_scroll'), {
-					'cur'    : 0,
-					'total'  : 0,
-					'error'  : "Loading...",
-					'autnum' : asn
+					'cur'   : 0,
+					'total' : 0,
+					'error' : "Loading...",
+					'obj'   : rdapdata
 				});
+
+
 		
-			$.getJSON(piranha.helper.url(piranha.conf.cgi, { "mode": "rdap", "rdaptype": "asn", "rdapdata": asn }))
+			$.getJSON(piranha.helper.url(piranha.conf.cgi, { "mode": "rdap", "rdaptype": rdaptype, "rdapdata": rdapdata }))
 			.done(function(d) {
 		
 				var vcard = [ ];
@@ -977,10 +980,10 @@ var piranha = {
 				$('.piranha_footer_default').addClass('hide');
 		
 				var data = {
-					'cur'    : 'error' in d ? 0 : 1,
-					'total'  : vcard.length,
-					'error'  : 'error' in d ? d['error'] : '',
-					'autnum' : asn };
+					'cur'   : 'error' in d ? 0 : 1,
+					'total' : vcard.length,
+					'error' : 'error' in d ? d['error'] : '',
+					'obj'   : rdapdata };
 		
 				piranha.autofill($('.piranha_footer_scroll'), data);
 		
@@ -1008,12 +1011,15 @@ var piranha = {
 		},
 
 		"clear": function(x) {
-			$('.piranha_template_footer, .piranha_footer_scroll').addClass('hide');
-			$('.piranha_footer_default').removeClass('hide');
+			$('.piranha_footer').fadeOut();
+			setTimeout(function() {
+				$('.piranha_template_footer, .piranha_footer_scroll').addClass('hide');
+				$('.piranha_footer_default').removeClass('hide');
+			},1000);
 		},
 
-		"scroll_back": function(x) { piranha.asinfo.scroll(x.target, -1); },
-		"scroll_fwd":  function(x) { piranha.asinfo.scroll(x.target,  1); },
+		"scroll_back": function(x) { piranha.footinfo.scroll(x.target, -1); },
+		"scroll_fwd":  function(x) { piranha.footinfo.scroll(x.target,  1); },
 		
 		"scroll": function(o, cnt) {
 			var data = $('.piranha_footer_scroll').data('piranha');

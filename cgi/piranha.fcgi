@@ -358,6 +358,7 @@ sub mode_rdap {
 	my $q = sqlquery($dbh, "SELECT value FROM rdap_cache WHERE name = ?", $var->{rdapdata});
 	my($r) = $q->fetchrow_array();
 
+
 	if ( !defined $r ) {
 
 		my $x = $var->{rdapdata};
