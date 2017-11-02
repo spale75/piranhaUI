@@ -910,14 +910,16 @@ var piranha = {
 				rdaptype = 'ip6';
 			}
 			
+			$('.piranha_template_footer, .piranha_footer_scroll').addClass('hide');
+			$('.piranha_footer_default').show();
 			$('.piranha_template_footer:not(:first)').remove();
 			$('.piranha_footer').fadeIn();
 		
 			piranha.autofill($('.piranha_footer_scroll'), {
 					'cur'   : 0,
 					'total' : 0,
-					'error' : "Loading...",
-					'obj'   : rdapdata
+					'error' : null,
+					'obj'   : null
 				});
 
 
@@ -977,7 +979,7 @@ var piranha = {
 					});
 				}
 		
-				$('.piranha_footer_default').addClass('hide');
+				$('.piranha_footer_default').hide();
 		
 				var data = {
 					'cur'   : 'error' in d ? 0 : 1,
@@ -1014,7 +1016,7 @@ var piranha = {
 			$('.piranha_footer').fadeOut();
 			setTimeout(function() {
 				$('.piranha_template_footer, .piranha_footer_scroll').addClass('hide');
-				$('.piranha_footer_default').removeClass('hide');
+				$('.piranha_footer_default').show();
 			},1000);
 		},
 
