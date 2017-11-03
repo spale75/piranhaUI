@@ -429,16 +429,78 @@ var piranha = {
 		"lookup": {
 			"init": function(x) {
 
-				$.each($('#piranha_body').find('.piranha_form_originas').find('button'), function(id, obj) {
-					$(obj).click(piranha.page.lookup.originasbtn);
+				$.each($('.piranha_lookup_form').find('button'), function(id, obj) {
+					$(obj).click(piranha.page.lookup.btn);
 				});
 
-				$.each($('#piranha_body').find('.piranha_form_prefix').find('button'), function(id, obj) {
-					$(obj).click(piranha.page.lookup.prefix);
+				$('.piranha_lookup_form').find('input').keypress(function (e) {
+					if (e.which == 13) {
+						$('.piranha_lookup_form').submit();
+						return false;
+					}
+				});
+
+				$('.piranha_lookup_form').find('select').change(function() {
+					piranha.page.lookup.submit();
+				});
+
+
+				$('.piranha_lookup_form').submit(function(x) {
+					piranha.page.lookup.submit($(x.target).attr('name'));
+					x.preventDefault();
 				});
 
 				piranha.spinner(0);
 
+			},
+			"btn": function(x) {
+				$(x.target).parent().children().removeClass('active btn-warning');
+				$(x.target).addClass('active btn-warning');
+				piranha.page.lookup.submit();
+			},
+			"submit": function() {
+
+				var q = {
+					mode:  null,
+					proto: null,
+					valid: null,
+					pagesize: 100,
+					page: 0,
+				};
+
+				q['peerid'] = $('.piranha_lookup_form').find('[name=peerid]').val();
+
+				$.each($('.piranha_lookup_form').find('.active'), function(id, obj) {
+					switch($(obj).attr('name')) {
+						case "proto_any":  q.proto = ""; break;
+						case "proto_ipv4": q.proto = "4"; break;
+						case "proto_ipv6": q.proto = "6"; break;
+						case "valid_dual": q.valid = true;  q.invalid = true;  break;
+						case "valid_on":   q.valid = true;  q.invalid = false; break;
+						case "valid_off":  q.valid = false; q.invalid = true;  break;
+					}
+				});
+
+
+				if ( piranha.re($('.piranha_lookup_form').find('[name=search_originas]').val(), 'asn') ) {
+					q.mode = 'search_originas';
+					q.asn = $('.piranha_lookup_form').find('[name=search_originas]').val();
+				}
+				else if ( piranha.re($('.piranha_lookup_form').find('[name=search_prefix]').val(), 'ip4') ) {
+					q.mode = 'search_prefix';
+					q.prefix = $('.piranha_lookup_form').find('[name=search_prefix]').val();
+				}
+				else if ( piranha.re($('.piranha_lookup_form').find('[name=search_prefix]').val(), 'ip6') ) {
+					q.mode = 'search_prefix';
+					q.prefix = $('.piranha_lookup_form').find('[name=search_prefix]').val();
+				}
+				else {
+					return;
+				}
+				console.log(q);
+
+				piranha.auto.routes.init(q, 'route', 'hide_nexthop');
+			
 			},
 			"originasbtn": function(x) {
 

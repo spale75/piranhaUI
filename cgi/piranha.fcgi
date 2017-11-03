@@ -58,11 +58,11 @@ my %conf = (
 		},
 		'search_prefix' => {
 			func => \&mode_search_prefix,
-			dep  => [ 'peerid', 'pagesize' ,'page', 'prefix' ],
+			dep  => [ 'peerid', 'pagesize' ,'page', 'prefix', 'valid', 'invalid' ],
 		},
 		'search_originas' => {
 			func => \&mode_search_originas,
-			dep  => [ 'asn', 'proto', 'peerid', 'page', 'pagesize' ],
+			dep  => [ 'asn', 'proto', 'peerid', 'page', 'pagesize', 'valid', 'invalid' ],
 		},
 		'vis_bgp_updates' => {
 			func => \&mode_vis_bgp_updates,
@@ -85,7 +85,7 @@ my %conf = (
 		rdaptype => '^(asn|ip4|ip6)$',
 		rdapdata => '^(\d+|\d+\.\d+\.\d+\.\d+(/\d+)?|[0-9a-fA-F:]+(/\d+)?)$'
 	},
-	logfile => '../../var/cgi_sql.log',
+	logfile => './cgi_sql.log',
 
 );
 
@@ -491,7 +491,11 @@ sub mode_search_prefix {
 		($ip, $mask, $less) = ($1, $3, $5);
 	}
 
-	my $q = sqlquery($dbh, "CALL get_route_by_prefix(?,?,?,?,?,?)", $var->{peerid}, $ip, $mask, $less, $var->{pagesize}, $var->{page});
+	my $q = sqlquery($dbh, "CALL get_route_by_prefix(?,?,?,?,?,?,?,?)",
+		$var->{peerid}, $ip, $mask, $less, $var->{pagesize}, $var->{page},
+		$var->{valid} eq 'true' ? 1 : 0,
+		$var->{invalid} eq 'true' ? 1 : 0
+	);
 	while(my $r = $q->fetchrow_hashref()) {
 		if ( exists $r->{prefix} ) {
 			push @{$j->{route}}, $r;
@@ -511,11 +515,18 @@ sub mode_search_originas {
 	my ($dbh, $var) = @_;
 	my $j = { 'route' => [ ] };
 	my $peerid = $var->{peerid} ? "AND peer_id = $var->{peerid}" : "";
+	my $valid = '';
+	if ( $var->{valid} ne $var->{invalid} ) {
+		$valid = "AND valid=" . ($var->{valid} eq 'true' ? 1 : 0);
+	}
 
 	my $q = sqlquery($dbh,
 		$var->{proto} eq 4 ?
-			"SELECT * FROM view_route4 WHERE origin_as = ? $peerid ORDER BY route_networkb,  route_netmask,   peer_id LIMIT ?,?" :
-			"SELECT * FROM view_route6 WHERE origin_as = ? $peerid ORDER BY route_networkb1, route_networkb2, route_netmask, peer_id LIMIT ?,?",
+			"SELECT * FROM view_route4 WHERE origin_as = ? $peerid $valid
+			ORDER BY route_networkb,  route_netmask,   peer_id LIMIT ?,?" :
+
+			"SELECT * FROM view_route6 WHERE origin_as = ? $peerid $valid
+			ORDER BY route_networkb1, route_networkb2, route_netmask, peer_id LIMIT ?,?",
 		$var->{asn}, $var->{page} * $var->{pagesize}, $var->{pagesize});
 	while(my $r = $q->fetchrow_hashref()) {
 		push @{$j->{route}}, $r;
