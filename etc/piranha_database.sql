@@ -45,7 +45,7 @@ CREATE TABLE `aspath` (
   KEY `idx_aspath6` (`aspath6`),
   KEY `idx_aspath7` (`aspath7`),
   KEY `idx_aspath8` (`aspath8`)
-) ENGINE=InnoDB AUTO_INCREMENT=213975 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -78,7 +78,7 @@ CREATE TABLE `community` (
   KEY `idx_community6` (`community6`),
   KEY `idx_community7` (`community7`),
   KEY `idx_community8` (`community8`)
-) ENGINE=InnoDB AUTO_INCREMENT=219 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -107,7 +107,7 @@ CREATE TABLE `nexthop` (
   `nexthop` varchar(50) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `index2` (`nexthop`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1215,7 +1215,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `get_route_by_prefix`(
     IN netmask1	TINYINT UNSIGNED,
     IN netmask2	TINYINT UNSIGNED,
     IN psize	INT UNSIGNED,
-    IN pnum		INT UNSIGNED
+    IN pnum		INT UNSIGNED,
+    IN valid    BOOLEAN,
+    IN invalid  BOOLEAN
 )
 MYPROC:BEGIN
 
@@ -1233,7 +1235,14 @@ SET network2	= IF(proto=6, CONV(SUBSTRING(HEX(INET6_ATON(prefix)), 17, 16), 16, 
 SET @netmask1	= IF(proto=4 AND netmask1 <= 32, netmask1, IF(proto=6 AND netmask1 <= 128, netmask1, NULL));
 SET @netmask2	= IF(proto=4 AND netmask2 <= 32, netmask2, IF(proto=6 AND netmask2 <= 128, netmask2, NULL));
 SET @q_prefix	= CONCAT("SELECT peer_ip, peer_asn, prefix, aspath, community, valid, updated, flap_a, flap_w FROM view_route", proto, " WHERE ");
-SET @q_suffix	= CONCAT(" ORDER BY ", IF(proto=4, "route_networkb, route_netmask, peer_id", "route_networkb1, route_networkb2, route_netmask, peer_id"), " LIMIT ", psize*pnum, ",", psize);
+SET @q_suffix	= CONCAT(" AND ( valid = ? OR 1 = ? ) ORDER BY ", IF(proto=4, "route_networkb, route_netmask, peer_id", "route_networkb1, route_networkb2, route_netmask, peer_id"), " LIMIT ", psize*pnum, ",", psize);
+SET @valid      = valid;
+
+IF valid=1 AND invalid=1 THEN
+	SET @validall = 1;
+ELSE
+	SET @validall = 0;
+END IF;
 
 IF @netmask1 IS NULL THEN
 	SET @netmask2 = NULL;
@@ -1262,12 +1271,12 @@ IF @netmask1 IS NULL THEN
 		SET @query = CONCAT(@q_prefix,"? BETWEEN route_networkb AND route_networke AND ( peer_id = ? OR 0 = ? )");
         SET @query = CONCAT(@query, @q_suffix);
 		PREPARE stmt FROM @query;
-        EXECUTE stmt USING @network, @peerid, @peerid;
+        EXECUTE stmt USING @network, @peerid, @peerid, @valid, @validall;
 	ELSE
     	SET @query = CONCAT(@q_prefix,"? BETWEEN route_networkb1 AND route_networke1 AND ? BETWEEN route_networkb2 AND route_networke2 AND ( peer_id = ? OR 0 = ? )");
         SET @query = CONCAT(@query, @q_suffix);
 		PREPARE stmt FROM @query;
-        EXECUTE stmt USING @network1, @network2, @peerid, @peerid;
+        EXECUTE stmt USING @network1, @network2, @peerid, @peerid, @valid, @validall;
 	END IF;
 -- match only exact match
 ELSEIF @netmask2 IS NULL OR @netmask2 = @netmask1 THEN
@@ -1277,12 +1286,12 @@ ELSEIF @netmask2 IS NULL OR @netmask2 = @netmask1 THEN
 		SET @query = CONCAT(@q_prefix,"? BETWEEN route_networkb AND route_networke AND route_netmask = ? AND ( peer_id = ? OR 0 = ? )");
 		SET @query = CONCAT(@query, @q_suffix);
 		PREPARE stmt FROM @query;
-		EXECUTE stmt USING @network, @netmask1, @peerid, @peerid;
+		EXECUTE stmt USING @network, @netmask1, @peerid, @peerid, @valid, @validall;
     ELSE
     	SET @query = CONCAT(@q_prefix,"? BETWEEN route_networkb1 AND route_networke1 AND ? BETWEEN route_networkb2 AND route_networke2 AND route_netmask = ? AND ( peer_id = ? OR 0 = ? )");
 		SET @query = CONCAT(@query, @q_suffix);
 		PREPARE stmt FROM @query;
-        EXECUTE stmt USING @network1, @network2, @netmask1, @peerid, @peerid;
+        EXECUTE stmt USING @network1, @network2, @netmask1, @peerid, @peerid, @valid, @validall;
 	END IF;
 
 -- match exact and more specific
@@ -1293,12 +1302,12 @@ ELSEIF @netmask1 < @netmask2 THEN
 		SET @query = CONCAT(@q_prefix,"? BETWEEN route_networkb AND route_networke AND route_netmask BETWEEN ? AND ? AND ( peer_id = ? OR 0 = ? )");
 		SET @query = CONCAT(@query, @q_suffix);
 		PREPARE stmt FROM @query;
-        EXECUTE stmt USING @network, @netmask1, @netmask2, @peerid, @peerid;
+        EXECUTE stmt USING @network, @netmask1, @netmask2, @peerid, @peerid, @valid, @validall;
     ELSE
     	SET @query = CONCAT(@q_prefix,"? BETWEEN route_networkb1 AND route_networke1 AND ? BETWEEN route_networkb2 AND route_networke2 AND route_netmask BETWEEN ? AND ? AND ( peer_id = ? OR 0 = ? )");
  		SET @query = CONCAT(@query, @q_suffix);
 		PREPARE stmt FROM @query;
-        EXECUTE stmt USING @network1, @network2, @netmask1, @netmask2, @peerid, @peerid;
+        EXECUTE stmt USING @network1, @network2, @netmask1, @netmask2, @peerid, @peerid, @valid, @validall;
 	END IF;-- match exact and less specific
 
 ELSEIF @netmask2 > @netmask1 THEN
@@ -1784,4 +1793,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-11-01  0:40:38
+-- Dump completed on 2017-11-03  1:34:09
