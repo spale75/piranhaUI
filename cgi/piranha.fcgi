@@ -467,7 +467,7 @@ sub mode_top100 {
 	}
 	elsif ( $var->{list} eq 'invalid_asn' ) {
 			my @cond;
-			my $q = sqlquery($dbh, "SELECT as_begin, as_end FROM asinfo_iana WHERE descr IS NOT NULL");
+			my $q = sqlquery($dbh, "SELECT as_begin, as_end FROM rdap_root_asn WHERE descr IS NOT NULL");
 			while(my @r = $q->fetchrow_array()) {
 				push @cond, sprintf("origin_as BETWEEN %i AND %i", @r);
 			}
