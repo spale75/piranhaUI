@@ -95,6 +95,11 @@ my $dbh = sqlconnect($conf{conf}{sql});
 
 while(new CGI::Fast) {
 
+	if ( ! $dbh->ping ) {
+		sqldisconnect($dbh);
+		$dbh = sqlconnect($conf{conf}{sql});
+	}
+
 	my %var;
 	foreach (split(/&/, $ENV{QUERY_STRING})) {
 		my ($n,$v) = split(/=/);
@@ -615,6 +620,15 @@ sub sqlconnect {
 		$sql->{pass}, { mysql_enable_utf8 => 1 }
 	) || die "Could not connect to database: $DBI::errstr";
 	return $dbh;
+}
+
+sub sqldisconnect {
+	my($dbh) = @_;
+
+	if ( defined $dbh ) {
+		$dbh->disconnect();
+	}
+	$dbh = undef;
 }
 
 sub sqlquery {
