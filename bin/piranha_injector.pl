@@ -195,7 +195,6 @@ sub handle_file {
 		elsif ( $e->{type} eq 'announce' ) {
 
 			my $origin_as    = 0;
-			my $next_as      = undef;
 			my $aspathhex    = undef;
 			my $communityhex = undef;
 
@@ -209,8 +208,6 @@ sub handle_file {
 
 			if ( exists $e->{msg}{aspath} ) {
 				$origin_as = ${$e->{msg}{aspath}}[-1];
-				$next_as   = ${$e->{msg}{aspath}}[1];
-
 				$aspathhex = '';
 				foreach my $asn ( @{$e->{msg}{aspath}} ) {
 					$aspathhex .= sprintf("%08x", $asn);
@@ -224,9 +221,9 @@ sub handle_file {
 				}
 			}
 
-			sqlquery($dbh, 'CALL route_announce(?,?,?,?,?,?,?,?,@err)',
+			sqlquery($dbh, 'CALL route_announce(?,?,?,?,?,?,?,@err)',
 				$peer->{id}, $e->{timestamp}, $e->{msg}{prefix}, $e->{msg}{nexthop},
-				$origin_as, $next_as, $aspathhex, $communityhex);
+				$origin_as, $aspathhex, $communityhex);
 
 			my $q = sqlquery($dbh, 'SELECT @err');
 			while(my $e = $q->fetchrow_hashref()) {

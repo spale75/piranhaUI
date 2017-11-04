@@ -1013,7 +1013,7 @@ var piranha = {
 			var rdapdata = null;
 			var rdaptype = 'asn';
 
-			if ( typeof btn == "Object" )
+			if ( typeof btn == "object" )
 				rdapdata = $(btn).html();
 			else
 				rdapdata = btn;

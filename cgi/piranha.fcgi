@@ -249,9 +249,9 @@ sub mode_peer_last {
 				NULL AS peer_ip,
 				NULL AS peer_asn,
 				$prefix,
-				show_aspath(a.aslen,
-					a.aspath1, a.aspath2, a.aspath3, a.aspath4,
-					a.aspath5, a.aspath6, a.aspath7, a.aspath8, ?) AS aspath,
+				show_aspath(aspathlen,
+					aspath1, aspath2, aspath3, aspath4,
+					aspath5, aspath6, aspath7, aspath8) AS aspath,
 				show_community(c.comlen,
 					c.community1, c.community2, c.community3, c.community4,
 					c.community5, c.community6, c.community7, c.community8) AS community,
@@ -262,12 +262,11 @@ sub mode_peer_last {
 				NULL AS flap_w
 			FROM
 				$buf AS b
-					LEFT JOIN aspath a ON a.id = b.aspathid
 					LEFT JOIN community c ON c.id = b.communityid
 					LEFT JOIN nexthop n ON n.id = b.nexthopid
 			ORDER BY
 				timestamp DESC, pos
-			LIMIT ?,?", $p->{asn}, $var->{page} * $var->{pagesize}, $var->{pagesize} );
+			LIMIT ?,?", $var->{page} * $var->{pagesize}, $var->{pagesize} );
 		while(my $r = $q2->fetchrow_hashref()) {
 			push @{$j->{route}}, $r;
 		}
@@ -458,22 +457,28 @@ sub mode_top100 {
 			my($peerid, $network, $netmask) = split(/-/,$k);
 			my @net = split(/:/,$network);
 			$q = sqlquery($dbh, "SELECT * FROM view_$tbl WHERE peer_id=? AND $rnetq AND route_netmask=? $avalid", $peerid, @net, $netmask);
-			while(my $x = $q->fetchrow_hashref()) { push @{$j->{route}}, $x; }
+			while(my $x = $q->fetchrow_hashref()) { clean_aspath($x); push @{$j->{route}}, $x; }
 			$cnt++;
 		}
 	}
 	elsif ( $var->{list} eq 'long_aspath' ) {
-			my @aid;
-			my $q = sqlquery($dbh, "SELECT id FROM aspath ORDER BY aslen DESC LIMIT 500");
-			while(my @x = $q->fetchrow_array()) { push @aid, $x[0]; }
+		my $q = sqlquery($dbh, "
+				SELECT peerid, $net, netmask
+				FROM $tbl
+				ORDER BY aspathlen DESC
+				LIMIT ?,?",
+				$var->{pagesize} * $var->{page}, $var->{pagesize});
+		while(my @x = $q->fetchrow_array()) {
 
-			$q = sqlquery($dbh, "
+			my $q2 = sqlquery($dbh,"
 				SELECT *
 				FROM view_$tbl
-				WHERE aspath_id IN ( " . join(',',@aid) . " ) $avalid $peer_id
-				ORDER BY aslen
-				DESC LIMIT ?,?", $var->{pagesize} * $var->{page}, $var->{pagesize});
-			while(my $x = $q->fetchrow_hashref()) { push @{$j->{route}}, $x; }
+				WHERE peer_id=? AND $rnetq AND route_netmask=? $avalid", @x);
+			while(my $r = $q2->fetchrow_hashref()) {
+				clean_aspath($r);
+				push @{$j->{route}}, $r;
+			}
+		}
 	}
 	elsif ( $var->{list} eq 'invalid_asn' ) {
 			my @cond;
@@ -487,7 +492,7 @@ sub mode_top100 {
 				WHERE ( " . join(' OR ', @cond) . ") $avalid $peer_id
 				ORDER BY $rnet, route_netmask, peer_id
 				LIMIT ?,?", $var->{pagesize} * $var->{page}, $var->{pagesize});
-			while(my $x = $q->fetchrow_hashref()) { push @{$j->{route}}, $x; }
+			while(my $x = $q->fetchrow_hashref()) { clean_aspath($x); push @{$j->{route}}, $x; }
 	}
 	return $j;
 }
@@ -539,6 +544,7 @@ sub mode_search_originas {
 			ORDER BY route_networkb1, route_networkb2, route_netmask, peer_id LIMIT ?,?",
 		$var->{asn}, $var->{page} * $var->{pagesize}, $var->{pagesize});
 	while(my $r = $q->fetchrow_hashref()) {
+		clean_aspath($r);
 		push @{$j->{route}}, $r;
 	}
 
@@ -683,4 +689,12 @@ sub load_conf {
 	while(<F>) { $j.=$_; }
 	close(F);
 	return decode_json($j);
+}
+
+sub clean_aspath {
+	my ($x) = @_;
+
+	for(1..8) {
+		delete $x->{"aspath$_"} if exists $x->{"aspath$_"};
+	}
 }
