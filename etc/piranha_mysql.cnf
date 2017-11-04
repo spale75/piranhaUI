@@ -1,6 +1,6 @@
 [mysqld]
-max_heap_table_size=134217728
-tmp_table_size=134217728
+max_heap_table_size=268435456
+tmp_table_size=268435456
 long_query_time=1
 slow_query_log=1
 query_cache_type=1
