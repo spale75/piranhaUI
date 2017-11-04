@@ -59,6 +59,8 @@ var piranha = {
 		},
 	},
 
+	"var": { },
+
 	"re": function(str, set) {
 
 		switch(set) {
@@ -109,7 +111,19 @@ var piranha = {
 		$('.piranha_footer_scroll_fwd').click(this.footinfo.scroll_fwd);
 
 		piranha.helper.resize();
+		piranha.translations();
 
+	},
+
+	"translations": function() {
+		$.getJSON(piranha.helper.url(piranha.conf.cgi, { "mode": "translation" }))
+		.done(function(d) {
+			piranha.var['translations'] = d;
+		})
+		.fail(function(jqxhr, textStatus, error) {
+			var err = textStatus + ": " + error;
+			console.log( "Request Failed: " + err );
+		});
 	},
 
 	"gettemplate": function(name, cb) {
@@ -778,6 +792,25 @@ var piranha = {
 		"resize": function() {
 			$('.piranha_resize_vis').css('height', $(window).height() - 400);
 		},
+		"trcom": function(com) {
+			var tr  = piranha.var.translations.community;
+			var asn = com.split(':')[0];
+			var num = com.split(':')[1];
+			var name = null;
+
+			if ( ! tr ) { return null; }
+
+			if ( asn in tr ) {
+				for(var first in tr[asn].num) {
+					if ( first <= num && tr[asn].num[first].last >= num ) {
+						name = tr[asn].num[first].name;
+						break;
+					}
+				}
+				if ( name ) { name = tr[asn].name + ":" + name; }
+			}
+			return name;
+		},
 	},
 
 	"autofill": function(obj, data, path) {
@@ -806,6 +839,15 @@ var piranha = {
 							}
 							else if ( piranha.re(val,'ip4') || piranha.re(val, 'ip6') ) {
 								val = '<a href="javascript:void(0)" class="piranha_footinfo_click">' + val + '</a>';
+							}
+							else if ( name.match(/community/) ) {
+								var arr = val.split(' ');
+								val = '';
+								for(var i=0; i<arr.length; i++) {
+									nval = piranha.helper.trcom(arr[i]);
+									val += nval ? nval : arr[i];
+									val += " ";
+								}
 							}
 				
 							$(this).html(val);

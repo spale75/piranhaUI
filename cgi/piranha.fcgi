@@ -26,6 +26,9 @@ my %conf = (
 			lastdown
 		FROM peer",
 	mtree => {
+		'translation' => {
+			func => \&mode_translation,
+		},
 		'stats' => {
 			func => \&mode_stats,
 		},
@@ -156,6 +159,32 @@ sub json_output {
 	}
 }
 
+
+sub mode_translation {
+	my ($dbh, $var) = @_;
+	my $j = { };
+
+	my $q = sqlquery($dbh, "
+		SELECT
+			dc.asn AS asn,
+			dc.name AS asn_name,
+			ds.num1 AS first,
+			ds.num2 AS last,
+			ds.name AS name
+		FROM
+			descr_community dc
+			RIGHT JOIN descr_community ds ON
+				dc.num1 IS NULL AND
+				ds.num1 IS NOT NULL AND
+				dc.asn = ds.asn
+		WHERE dc.asn IS NOT NULL");
+	while(my $r = $q->fetchrow_hashref()) {
+		$j->{community}{$r->{asn}}{name} = $r->{asn_name};
+		$j->{community}{$r->{asn}}{num}{$r->{first}} = { last => $r->{last}, name => $r->{name} };
+	}
+
+	return $j;
+}
 
 sub mode_stats {
 	my ($dbh, $var) = @_;
