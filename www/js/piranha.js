@@ -581,6 +581,7 @@ var piranha = {
 				var data = $('#piranha_vis').data('piranha');
 				$('#piranha_vis').html('');
 				piranha.page.vis.vis[data.type](data);
+				piranha.spinner(false);
 			},
 
 			"vis": {
@@ -652,6 +653,54 @@ var piranha = {
 						var err = textStatus + ": " + error;
 						console.log( "Request Failed: " + err );
 					});
+				},
+				"border_paths": function(gconf) {
+					$.getJSON(piranha.helper.url(piranha.conf.cgi, { "mode": "vis_border_paths", "limit": 100 }))
+					.done(function(d) {
+						d = d.vis;
+						var data = { nodes: [ ], edges: [ ] };
+
+						for (var asn in d.nodes) {
+							data.nodes.push({id: asn, value: d.nodes[asn], label: "AS"+asn});
+						}
+
+						for (var src in d.edges) {
+							for (var dst in d.edges[src]) {
+								var cnt   = d.edges[src][dst]['cnt'];
+								var proto = d.edges[src][dst]['proto'];
+								var color = proto == 10 ? '#49B864' : ( proto == 4 ? '#F5AC59' : '#48C0DC' );
+								data.edges.push({
+									from: src,
+									to: dst,
+									value: cnt,
+									title: cnt + ' routes',
+									color: {
+										color: color,
+									},
+								});
+							}
+						}
+						var options = {
+							edges: {
+								scaling: {
+									min: 1,
+									max: 20,
+								},
+							},
+						};
+						console.log("data",data);
+						network = new vis.Network(document.getElementById('piranha_vis'), data, options);
+						network.on('click', function(e) {
+							piranha.footinfo.lookup(e.nodes[0]);
+						});
+						
+					})
+					.fail(function(jqxhr, textStatus, error) {
+						var err = textStatus + ": " + error;
+						console.log( "Request Failed: " + err );
+					});
+
+
 				},
 				"demo3d": function() {
 
@@ -961,9 +1010,13 @@ var piranha = {
 	"footinfo": {
 
 		"lookup": function(btn) {
-
-			var rdapdata = $(btn).html();
+			var rdapdata = null;
 			var rdaptype = 'asn';
+
+			if ( typeof btn == "Object" )
+				rdapdata = $(btn).html();
+			else
+				rdapdata = btn;
 
 			if ( piranha.re(rdapdata, 'ip4') ) {
 				rdaptype = 'ip4';
@@ -1040,6 +1093,7 @@ var piranha = {
 						}
 					});
 				}
+				console.log(vcard);
 		
 				$('.piranha_footer_default').hide();
 		

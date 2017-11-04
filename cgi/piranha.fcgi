@@ -68,6 +68,10 @@ my %conf = (
 			func => \&mode_vis_bgp_updates,
 			dep  => [ 'proto' ],
 		},
+		'vis_border_paths' => {
+			func => \&mode_vis_border_paths,
+			dep => [ 'limit' ],
+		},
 	},
 	
 	vars => {
@@ -83,7 +87,8 @@ my %conf = (
 		page     => '^\d+$',
 		prefix   => '^[0-9a-fA-F:\.\/\-]*$',
 		rdaptype => '^(asn|ip4|ip6)$',
-		rdapdata => '^(\d+|\d+\.\d+\.\d+\.\d+(/\d+)?|[0-9a-fA-F:]+(/\d+)?)$'
+		rdapdata => '^(\d+|\d+\.\d+\.\d+\.\d+(/\d+)?|[0-9a-fA-F:]+(/\d+)?)$',
+		limit    => '^\d+$',
 	},
 	logfile => './cgi_sql.log',
 
@@ -594,6 +599,20 @@ sub mode_vis_bgp_updates {
 		push @{$j->{vis}}, [ $t+0, [ @pd ] ];
 	}
 
+	return $j;
+}
+
+sub mode_vis_border_paths {
+	my($dbh, $var) = @_;
+
+	my $j = { 'vis' => { } };
+
+	my $q = sqlquery($dbh, "CALL vis_border_paths(?)", $var->{limit});
+	while(my $b = $q->fetchrow_hashref()) {
+		$j->{vis}{nodes}{$b->{src}} = 1;
+		$j->{vis}{nodes}{$b->{dst}} = 0;
+		$j->{vis}{edges}{$b->{src}}{$b->{dst}} = { cnt => $b->{cnt}, proto => $b->{proto} };
+	}
 	return $j;
 }
 
