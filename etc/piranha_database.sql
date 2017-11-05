@@ -284,6 +284,8 @@ CREATE TABLE `route4` (
   `networke` int(10) unsigned DEFAULT NULL,
   `netmask` tinyint(3) unsigned NOT NULL,
   `origin_as` int(10) unsigned DEFAULT NULL,
+  `nas` int(10) unsigned DEFAULT NULL,
+  `nnas` int(10) unsigned DEFAULT NULL,
   `nexthopid` int(10) unsigned DEFAULT NULL,
   `aspathlen` tinyint(3) unsigned DEFAULT '0',
   `aspath0` varbinary(128) DEFAULT NULL,
@@ -333,7 +335,8 @@ CREATE TABLE `route4` (
   KEY `idx_flapw` (`flap_w`),
   KEY `idx_validnetmask` (`valid`,`netmask`),
   KEY `idx_netmask` (`netmask`),
-  KEY `idx_aslen` (`aspathlen`)
+  KEY `idx_aslen` (`aspathlen`),
+  KEY `idx_nas` (`nas`,`nnas`,`peerid`)
 ) ENGINE=MRG_MyISAM DEFAULT CHARSET=utf8 UNION=(`peer_route_1`,`peer_route_3`);
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -352,6 +355,8 @@ CREATE TABLE `route6` (
   `networke2` bigint(20) unsigned DEFAULT NULL,
   `netmask` tinyint(3) unsigned NOT NULL,
   `origin_as` int(10) unsigned DEFAULT NULL,
+  `nas` int(10) unsigned DEFAULT NULL,
+  `nnas` int(10) unsigned DEFAULT NULL,
   `nexthopid` int(10) unsigned DEFAULT NULL,
   `aspathlen` tinyint(3) unsigned DEFAULT '0',
   `aspath0` varbinary(128) DEFAULT NULL,
@@ -401,7 +406,8 @@ CREATE TABLE `route6` (
   KEY `idx_flapw` (`flap_w`),
   KEY `idx_validnetmask` (`valid`,`netmask`),
   KEY `idx_netmask` (`netmask`),
-  KEY `idx_aslen` (`aspathlen`)
+  KEY `idx_aslen` (`aspathlen`),
+  KEY `idx_nas` (`nas`,`nnas`,`peerid`)
 ) ENGINE=MRG_MyISAM DEFAULT CHARSET=utf8 UNION=(`peer_route_2`,`peer_route_4`);
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -437,22 +443,7 @@ CREATE TABLE `template_rbuf4` (
   `netmask` tinyint(3) unsigned NOT NULL,
   `origin_as` int(10) unsigned DEFAULT NULL,
   `aspathlen` tinyint(3) unsigned DEFAULT '0',
-  `aspath0` varbinary(128) DEFAULT NULL,
-  `aspath1` varbinary(128) DEFAULT NULL,
-  `aspath2` varbinary(128) DEFAULT NULL,
-  `aspath3` varbinary(128) DEFAULT NULL,
-  `aspath4` varbinary(128) DEFAULT NULL,
-  `aspath5` varbinary(128) DEFAULT NULL,
-  `aspath6` varbinary(128) DEFAULT NULL,
-  `aspath7` varbinary(128) DEFAULT NULL,
-  `aspath8` varbinary(128) DEFAULT NULL,
-  `aspath9` varbinary(128) DEFAULT NULL,
-  `aspath10` varbinary(128) DEFAULT NULL,
-  `aspath11` varbinary(128) DEFAULT NULL,
-  `aspath12` varbinary(128) DEFAULT NULL,
-  `aspath13` varbinary(128) DEFAULT NULL,
-  `aspath14` varbinary(128) DEFAULT NULL,
-  `aspath15` varbinary(128) DEFAULT NULL,
+  `aspathbin` varbinary(1024) DEFAULT NULL,
   `communityid` int(10) unsigned DEFAULT NULL,
   `nexthopid` int(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`pos`),
@@ -477,22 +468,7 @@ CREATE TABLE `template_rbuf6` (
   `netmask` tinyint(3) unsigned NOT NULL,
   `origin_as` int(10) unsigned DEFAULT NULL,
   `aspathlen` tinyint(3) unsigned DEFAULT '0',
-  `aspath0` varbinary(128) DEFAULT NULL,
-  `aspath1` varbinary(128) DEFAULT NULL,
-  `aspath2` varbinary(128) DEFAULT NULL,
-  `aspath3` varbinary(128) DEFAULT NULL,
-  `aspath4` varbinary(128) DEFAULT NULL,
-  `aspath5` varbinary(128) DEFAULT NULL,
-  `aspath6` varbinary(128) DEFAULT NULL,
-  `aspath7` varbinary(128) DEFAULT NULL,
-  `aspath8` varbinary(128) DEFAULT NULL,
-  `aspath9` varbinary(128) DEFAULT NULL,
-  `aspath10` varbinary(128) DEFAULT NULL,
-  `aspath11` varbinary(128) DEFAULT NULL,
-  `aspath12` varbinary(128) DEFAULT NULL,
-  `aspath13` varbinary(128) DEFAULT NULL,
-  `aspath14` varbinary(128) DEFAULT NULL,
-  `aspath15` varbinary(128) DEFAULT NULL,
+  `aspathbin` varbinary(1024) DEFAULT NULL,
   `communityid` int(10) unsigned DEFAULT NULL,
   `nexthopid` int(10) unsigned DEFAULT NULL,
   PRIMARY KEY (`pos`),
@@ -513,6 +489,8 @@ CREATE TABLE `template_route4` (
   `networke` int(10) unsigned DEFAULT NULL,
   `netmask` tinyint(3) unsigned NOT NULL,
   `origin_as` int(10) unsigned DEFAULT NULL,
+  `nas` int(10) unsigned DEFAULT NULL,
+  `nnas` int(10) unsigned DEFAULT NULL,
   `nexthopid` int(10) unsigned DEFAULT NULL,
   `aspathlen` tinyint(3) unsigned DEFAULT '0',
   `aspath0` varbinary(128) DEFAULT NULL,
@@ -562,7 +540,8 @@ CREATE TABLE `template_route4` (
   KEY `idx_flapw` (`flap_w`),
   KEY `idx_validnetmask` (`valid`,`netmask`),
   KEY `idx_netmask` (`netmask`),
-  KEY `idx_aslen` (`aspathlen`)
+  KEY `idx_aslen` (`aspathlen`),
+  KEY `idx_nas` (`nas`,`nnas`,`peerid`)
 ) ENGINE=BLACKHOLE DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -581,6 +560,8 @@ CREATE TABLE `template_route6` (
   `networke2` bigint(20) unsigned DEFAULT NULL,
   `netmask` tinyint(3) unsigned NOT NULL,
   `origin_as` int(10) unsigned DEFAULT NULL,
+  `nas` int(10) unsigned DEFAULT NULL,
+  `nnas` int(10) unsigned DEFAULT NULL,
   `nexthopid` int(10) unsigned DEFAULT NULL,
   `aspathlen` tinyint(3) unsigned DEFAULT '0',
   `aspath0` varbinary(128) DEFAULT NULL,
@@ -630,7 +611,8 @@ CREATE TABLE `template_route6` (
   KEY `idx_flapw` (`flap_w`),
   KEY `idx_validnetmask` (`valid`,`netmask`),
   KEY `idx_netmask` (`netmask`),
-  KEY `idx_aslen` (`aspathlen`)
+  KEY `idx_aslen` (`aspathlen`),
+  KEY `idx_nas` (`nas`,`nnas`,`peerid`)
 ) ENGINE=BLACKHOLE DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -921,6 +903,39 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP FUNCTION IF EXISTS `show_aspathbin` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` FUNCTION `show_aspathbin`(aspathlen INTEGER UNSIGNED, aspathbin BLOB) RETURNS varchar(8192) CHARSET utf8
+BEGIN
+
+DECLARE output VARCHAR(8192) DEFAULT '';
+DECLARE pos INTEGER UNSIGNED DEFAULT 0;
+DECLARE sep VARCHAR(1) DEFAULT '';
+
+WHILE pos < len
+DO
+	SET output = CONCAT(output, sep, CONV(HEX(SUBSTRING(aspathbin FROM (pos*4)+1 FOR 4)),16,10));
+    SET sep = ' ';
+    SET pos = pos + 1;
+END WHILE;
+
+
+RETURN output;
+
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP FUNCTION IF EXISTS `show_community` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1020,64 +1035,104 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `get_aspath_subtree`( IN in_aspath TEXT, IN fmt VARCHAR(50) )
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_aspath_subtree`( IN in_aspath TEXT, IN lim INTEGER UNSIGNED )
 BEGIN
 
-DECLARE i1 BOOLEAN DEFAULT 1;
-DECLARE i2 BOOLEAN DEFAULT 1;
-DECLARE i3 BOOLEAN DEFAULT 1;
-DECLARE i4 BOOLEAN DEFAULT 1;
-DECLARE i5 BOOLEAN DEFAULT 1;
-DECLARE i6 BOOLEAN DEFAULT 1;
-DECLARE i7 BOOLEAN DEFAULT 1;
-DECLARE i8 BOOLEAN DEFAULT 1;
+DECLARE i0  BOOLEAN DEFAULT 1;
+DECLARE i1  BOOLEAN DEFAULT 1;
+DECLARE i2  BOOLEAN DEFAULT 1;
+DECLARE i3  BOOLEAN DEFAULT 1;
+DECLARE i4  BOOLEAN DEFAULT 1;
+DECLARE i5  BOOLEAN DEFAULT 1;
+DECLARE i6  BOOLEAN DEFAULT 1;
+DECLARE i7  BOOLEAN DEFAULT 1;
+DECLARE i8  BOOLEAN DEFAULT 1;
+DECLARE i9  BOOLEAN DEFAULT 1;
+DECLARE i10 BOOLEAN DEFAULT 1;
+DECLARE i11 BOOLEAN DEFAULT 1;
+DECLARE i12 BOOLEAN DEFAULT 1;
+DECLARE i13 BOOLEAN DEFAULT 1;
+DECLARE i14 BOOLEAN DEFAULT 1;
+DECLARE i15 BOOLEAN DEFAULT 1;
 
-DECLARE p1 VARBINARY(128) DEFAULT '';
-DECLARE p2 VARBINARY(128) DEFAULT '';
-DECLARE p3 VARBINARY(128) DEFAULT '';
-DECLARE p4 VARBINARY(128) DEFAULT '';
-DECLARE p5 VARBINARY(128) DEFAULT '';
-DECLARE p6 VARBINARY(128) DEFAULT '';
-DECLARE p7 VARBINARY(128) DEFAULT '';
-DECLARE p8 VARBINARY(128) DEFAULT '';
+DECLARE p0  VARBINARY(128) DEFAULT NULL;
+DECLARE p1  VARBINARY(128) DEFAULT NULL;
+DECLARE p2  VARBINARY(128) DEFAULT NULL;
+DECLARE p3  VARBINARY(128) DEFAULT NULL;
+DECLARE p4  VARBINARY(128) DEFAULT NULL;
+DECLARE p5  VARBINARY(128) DEFAULT NULL;
+DECLARE p6  VARBINARY(128) DEFAULT NULL;
+DECLARE p7  VARBINARY(128) DEFAULT NULL;
+DECLARE p8  VARBINARY(128) DEFAULT NULL;
+DECLARE p9  VARBINARY(128) DEFAULT NULL;
+DECLARE p10 VARBINARY(128) DEFAULT NULL;
+DECLARE p11 VARBINARY(128) DEFAULT NULL;
+DECLARE p12 VARBINARY(128) DEFAULT NULL;
+DECLARE p13 VARBINARY(128) DEFAULT NULL;
+DECLARE p14 VARBINARY(128) DEFAULT NULL;
+DECLARE p15 VARBINARY(128) DEFAULT NULL;
 
 DECLARE len INTEGER UNSIGNED DEFAULT LENGTH(in_aspath) - LENGTH(REPLACE(in_aspath, ' ', '')) + 1;
 DECLARE pos INTEGER UNSIGNED DEFAULT 0;
 
 WHILE pos < len DO
-	SET @asnbin = UNHEX(LPAD(HEX(0+SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', pos+1),' ', -1)),8,'0'));
+	SET @asn = LOWER(LPAD(HEX(0+SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', pos+1),' ', -1)),8,'0'));
 
-	IF pos/32 < 1 THEN
-		SET p1 = CONCAT(p1,@asnbin);
-	ELSEIF pos/32 < 2 THEN
-		SET p2 = CONCAT(p2,@asnbin);
-	ELSEIF pos/32 < 3 THEN
-		SET p3 = CONCAT(p3,@asnbin);
-	ELSEIF pos/32 < 4 THEN
-		SET p4 = CONCAT(p4,@asnbin);
-	ELSEIF pos/32 < 5 THEN
-		SET p5 = CONCAT(p5,@asnbin);
-	ELSEIF pos/32 < 6 THEN
-		SET p6 = CONCAT(p6,@asnbin);
-	ELSEIF pos/32 < 7 THEN
-		SET p7 = CONCAT(p7,@asnbin);
-	ELSEIF pos/32 < 8 THEN
-		SET p8 = CONCAT(p8,@asnbin);
+	IF pos/16 < 1 THEN
+		SET p0 = CONCAT(IFNULL(p0,''), @asn);
+	ELSEIF pos/16 < 2 THEN
+		SET p1 = CONCAT(IFNULL(p1,''), @asn);
+	ELSEIF pos/16 < 3 THEN
+		SET p2 = CONCAT(IFNULL(p2,''), @asn);
+	ELSEIF pos/16 < 4 THEN
+		SET p3 = CONCAT(IFNULL(p3,''), @asn);
+	ELSEIF pos/16 < 5 THEN
+		SET p4 = CONCAT(IFNULL(p4,''), @asn);
+	ELSEIF pos/16 < 6 THEN
+		SET p5 = CONCAT(IFNULL(p5,''), @asn);
+	ELSEIF pos/16 < 7 THEN
+		SET p6 = CONCAT(IFNULL(p6,''), @asn);
+	ELSEIF pos/16 < 8 THEN
+		SET p7 = CONCAT(IFNULL(p7,''), @asn);
+	ELSEIF pos/16 < 9 THEN
+		SET p8 = CONCAT(IFNULL(p8,''), @asn);
+	ELSEIF pos/16 < 10 THEN
+		SET p9 = CONCAT(IFNULL(p9,''), @asn);
+	ELSEIF pos/16 < 11 THEN
+		SET p10 = CONCAT(IFNULL(p10,''), @asn);
+	ELSEIF pos/16 < 12 THEN
+		SET p11 = CONCAT(IFNULL(p11,''), @asn);
+	ELSEIF pos/16 < 13 THEN
+		SET p12 = CONCAT(IFNULL(p12,''), @asn);
+	ELSEIF pos/16 < 14 THEN
+		SET p13 = CONCAT(IFNULL(p13,''), @asn);
+	ELSEIF pos/16 < 15 THEN
+		SET p14 = CONCAT(IFNULL(p14,''), @asn);
+	ELSEIF pos/16 < 16 THEN
+		SET p15 = CONCAT(IFNULL(p15,''), @asn);
 	END IF;
 
-    SET pos = pos + 1;
+	SET pos = pos + 1;
 END WHILE;
 
+IF FLOOR(len/16) >= 0 THEN SET i0 = 0; SET @index="idx_aspath0"; SET p0 = CONCAT(p0,'%'); END IF;
+IF FLOOR(len/16) >= 1 THEN SET i1 = 0; SET @index="idx_aspath1"; SET p1 = CONCAT(p1,'%'); END IF;
+IF FLOOR(len/16) >= 2 THEN SET i2 = 0; SET @index="idx_aspath2"; SET p2 = CONCAT(p2,'%'); END IF;
+IF FLOOR(len/16) >= 3 THEN SET i3 = 0; SET @index="idx_aspath3"; SET p3 = CONCAT(p3,'%'); END IF;
+IF FLOOR(len/16) >= 4 THEN SET i4 = 0; SET @index="idx_aspath4"; SET p4 = CONCAT(p4,'%'); END IF;
+IF FLOOR(len/16) >= 5 THEN SET i5 = 0; SET @index="idx_aspath5"; SET p5 = CONCAT(p5,'%'); END IF;
+IF FLOOR(len/16) >= 6 THEN SET i6 = 0; SET @index="idx_aspath6"; SET p6 = CONCAT(p6,'%'); END IF;
+IF FLOOR(len/16) >= 7 THEN SET i7 = 0; SET @index="idx_aspath7"; SET p7 = CONCAT(p7,'%'); END IF;
+IF FLOOR(len/16) >= 8 THEN SET i8 = 0; SET @index="idx_aspath8"; SET p8 = CONCAT(p8,'%'); END IF;
+IF FLOOR(len/16) >= 9 THEN SET i9 = 0; SET @index="idx_aspath9"; SET p9 = CONCAT(p9,'%'); END IF;
+IF FLOOR(len/16) >= 10 THEN SET i10 = 0; SET @index="idx_aspath10"; SET p10 = CONCAT(p10,'%'); END IF;
+IF FLOOR(len/16) >= 11 THEN SET i11 = 0; SET @index="idx_aspath11"; SET p11 = CONCAT(p11,'%'); END IF;
+IF FLOOR(len/16) >= 12 THEN SET i12 = 0; SET @index="idx_aspath12"; SET p12 = CONCAT(p12,'%'); END IF;
+IF FLOOR(len/16) >= 13 THEN SET i13 = 0; SET @index="idx_aspath13"; SET p13 = CONCAT(p13,'%'); END IF;
+IF FLOOR(len/16) >= 14 THEN SET i14 = 0; SET @index="idx_aspath14"; SET p14 = CONCAT(p14,'%'); END IF;
+IF FLOOR(len/16) >= 15 THEN SET i15 = 0; SET @index="idx_aspath15"; SET p15 = CONCAT(p15,'%'); END IF;
 
-IF FLOOR(len/32) >= 0 THEN SET i1 = 0; SET @index="idx_aspath1"; SET p1 = CONCAT(p1,'%'); END IF;
-IF FLOOR(len/32) >= 1 THEN SET i2 = 0; SET @index="idx_aspath2"; SET p2 = CONCAT(p2,'%'); END IF;
-IF FLOOR(len/32) >= 2 THEN SET i3 = 0; SET @index="idx_aspath3"; SET p3 = CONCAT(p3,'%'); END IF;
-IF FLOOR(len/32) >= 3 THEN SET i4 = 0; SET @index="idx_aspath4"; SET p4 = CONCAT(p4,'%'); END IF;
-IF FLOOR(len/32) >= 4 THEN SET i5 = 0; SET @index="idx_aspath5"; SET p5 = CONCAT(p5,'%'); END IF;
-IF FLOOR(len/32) >= 5 THEN SET i6 = 0; SET @index="idx_aspath6"; SET p6 = CONCAT(p6,'%'); END IF;
-IF FLOOR(len/32) >= 6 THEN SET i7 = 0; SET @index="idx_aspath7"; SET p7 = CONCAT(p7,'%'); END IF;
-IF FLOOR(len/32) >= 7 THEN SET i8 = 0; SET @index="idx_aspath8"; SET p8 = CONCAT(p8,'%'); END IF;
-
+SET @p0=p0; SET @i0=i0;
 SET @p1=p1; SET @i1=i1;
 SET @p2=p2; SET @i2=i2;
 SET @p3=p3; SET @i3=i3;
@@ -1086,34 +1141,41 @@ SET @p5=p5; SET @i5=i5;
 SET @p6=p6; SET @i6=i6;
 SET @p7=p7; SET @i7=i7;
 SET @p8=p8; SET @i8=i8;
+SET @p9=p9; SET @i9=i9;
+SET @p10=p10; SET @i10=i10;
+SET @p11=p11; SET @i11=i11;
+SET @p12=p12; SET @i12=i12;
+SET @p13=p13; SET @i13=i13;
+SET @p14=p14; SET @i14=i14;
+SET @p15=p15; SET @i15=i15;
 
 
-IF fmt = 'test' THEN
-	SELECT HEX(@p1);
-	SET @q = CONCAT(
-		"SELECT ",
-        "COUNT(valid) as cnt, ",
-        "HEX(aspath1), ",
-		"show_aspath(IF(aspathlen>",len,",", len+1,", aspathlen), aspath1, aspath2, aspath3, aspath4, aspath5, aspath6, aspath7, aspath8) AS aspath ",
-        "FROM route4 FORCE INDEX (",@index,") ",
-        "WHERE ",
-		"(aspath1 LIKE ? OR 1 = ? ) AND (aspath2 LIKE ? OR 1 = ? ) AND (aspath3 LIKE ? OR 1 = ? ) AND (aspath4 LIKE ? OR 1 = ? ) AND ",
-        "(aspath5 LIKE ? OR 1 = ? ) AND (aspath6 LIKE ? OR 1 = ? ) AND (aspath7 LIKE ? OR 1 = ? ) AND (aspath8 LIKE ? OR 1 = ? ) AND ",
-        "valid=1 ",
-        "GROUP BY aspath, aspath1 ");
+SET @q = CONCAT(
+	"SELECT ",
+    "COUNT(valid) as cnt, ",
+	"show_aspath(IF(aspathlen>",len,",", len+1,", aspathlen), "
+	"aspath0, aspath1, aspath2, aspath3, ",
+    "aspath4, aspath5, aspath6, aspath7, ",
+    "aspath8, aspath9, aspath10, aspath11, ",
+    "aspath12, aspath13, aspath14, aspath15 ) AS aspath ",
+    "FROM route4 FORCE INDEX (",@index,") ",
+    "WHERE ",
+    "(aspath0 LIKE ? OR (1=?) ) AND (aspath1 LIKE ? OR (1=?) ) AND (aspath2 LIKE ? OR (1=?) ) AND (aspath3 LIKE ? OR (1=?) ) AND ",
+    "(aspath4 LIKE ? OR (1=?) ) AND (aspath5 LIKE ? OR (1=?) ) AND (aspath6 LIKE ? OR (1=?) ) AND (aspath7 LIKE ? OR (1=?) ) AND ",
+    "(aspath8 LIKE ? OR (1=?) ) AND (aspath9 LIKE ? OR (1=?) ) AND (aspath10 LIKE ? OR (1=?) ) AND (aspath11 LIKE ? OR (1=?) ) AND ",
+    "(aspath12 LIKE ? OR (1=?) ) AND (aspath13 LIKE ? OR (1=?) ) AND (aspath14 LIKE ? OR (1=?) ) AND (aspath15 LIKE ? OR (1=?) ) AND "
+	"valid=1 ",
+	"GROUP BY aspath ORDER BY cnt DESC LIMIT ", lim);
         
-        PREPARE stmt FROM @q;
-        EXECUTE stmt USING
-			@p1, @i1, @p2, @i2, @p3, @i3, @p4, @i4,
-            @p5, @i5, @p6, @i6, @p7, @i7, @p8, @i8;
-		DEALLOCATE PREPARE stmt;
-        
-        SHOW WARNINGS;
+PREPARE stmt FROM @q;
+EXECUTE stmt USING
+	@p0, @i0, @p1, @i1, @p2, @i2, @p3, @i3,
+    @p4, @i4, @p5, @i5, @p6, @i6, @p7, @i7,
+    @p8, @i8, @p9, @i9, @p10, @i10, @p11, @i11,
+    @p12, @i12, @p13, @i13, @p14, @i14, @p15, @i15;
 
+DEALLOCATE PREPARE stmt;
 
-ELSE
-	SELECT "Valid fmt are id,cnt and idaspath" AS error;
-END IF;
 
 END ;;
 DELIMITER ;
@@ -1841,6 +1903,9 @@ SET @aspath13  = aspath13;
 SET @aspath14  = aspath14;
 SET @aspath15  = aspath15;
 SET @aspathlen = aspathlen;
+SET @aspathbin = UNHEX(aspath_hex);
+SET @nas       = IF(aspathlen>1, CONV(SUBSTRING(aspath_hex FROM  9 FOR 8),16,10), NULL);
+SET @nnas      = IF(aspathlen>2, CONV(SUBSTRING(aspath_hex FROM 17 FOR 8),16,10), NULL);
 
 -- handle rolling buffer
 IF @piranha_rbuf_pos IS NULL THEN
@@ -1858,14 +1923,14 @@ IF network4 IS NOT NULL THEN
 		"INSERT INTO peer_route_", peerid, " SET ",
 		"peerid=?, networkb=?, networke=?, netmask=?, ",
         "nexthopid=?, origin_as=?, communityid=?, ",
-        "lastupdate=FROM_UNIXTIME(?), flap_a=1, aspathlen=?, ",
+        "lastupdate=FROM_UNIXTIME(?), flap_a=1, aspathlen=?, nas=?, nnas=?, ",
 		"aspath0=?, aspath1=?, aspath2=?, aspath3=?, ",
         "aspath4=?, aspath5=?, aspath6=?, aspath7=?, ",
         "aspath8=?, aspath9=?, aspath10=?, aspath11=?, ",
         "aspath12=?, aspath13=?, aspath14=?, aspath15=? ",
 		"ON DUPLICATE KEY UPDATE ",
         "nexthopid=?, origin_as=?, communityid=?, ",
-        "lastupdate=FROM_UNIXTIME(?), flap_a=flap_a+1, aspathlen=?, ",
+        "lastupdate=FROM_UNIXTIME(?), flap_a=flap_a+1, aspathlen=?, nas=?, nnas=?, ",
 		"aspath0=?, aspath1=?, aspath2=?, aspath3=?, ",
         "aspath4=?, aspath5=?, aspath6=?, aspath7=?, ",
         "aspath8=?, aspath9=?, aspath10=?, aspath11=?, ",
@@ -1881,14 +1946,14 @@ IF network4 IS NOT NULL THEN
 	EXECUTE stmt USING
 		@peerid, @network4, @network4e, @netmask,
         @nexthopid, @origin_as, @communityid,
-        @timestamp, @aspathlen,
+        @timestamp, @aspathlen, @nas, @nnas,
         @aspath0, @aspath1, @aspath2, @aspath3,
         @aspath4, @aspath5, @aspath6, @aspath7,
         @aspath8, @aspath9, @aspath10, @aspath11,
         @aspath12, @aspath13, @aspath14, @aspath15,
         
 		@nexthopid, @origin_as, @communityid,
-        @timestamp, @aspathlen,
+        @timestamp, @aspathlen, @nas, @nnas,
         @aspath0, @aspath1, @aspath2, @aspath3,
         @aspath4, @aspath5, @aspath6, @aspath7,
         @aspath8, @aspath9, @aspath10, @aspath11,
@@ -1904,10 +1969,7 @@ IF network4 IS NOT NULL THEN
 			"peerid=?, network=?, netmask=?, ",
 			"nexthopid=?, origin_as=?, communityid=?, ",
 			"timestamp=FROM_UNIXTIME(?), aspathlen=?, ",
-			"aspath0=?, aspath1=?, aspath2=?, aspath3=?, ",
-			"aspath4=?, aspath5=?, aspath6=?, aspath7=?, ",
-			"aspath8=?, aspath9=?, aspath10=?, aspath11=?, ",
-			"aspath12=?, aspath13=?, aspath14=?, aspath15=? "
+			"aspathbin=?"
 		);
         
 		PREPARE stmt FROM @query;
@@ -1916,10 +1978,7 @@ IF network4 IS NOT NULL THEN
 			@peerid, @network4, @netmask,
 			@nexthopid, @origin_as, @communityid,
 			@timestamp, @aspathlen,
-			@aspath0, @aspath1, @aspath2, @aspath3,
-			@aspath4, @aspath5, @aspath6, @aspath7,
-			@aspath8, @aspath9, @aspath10, @aspath11,
-			@aspath12, @aspath13, @aspath14, @aspath15;
+			@aspathbin;
 		DEALLOCATE PREPARE stmt;
         
         SET @piranha_rbuf_pos = ( @piranha_rbuf_pos + 1 ) % @piranha_rbuf_max;
@@ -1932,14 +1991,14 @@ ELSEIF network61 IS NOT NULL AND network62 IS NOT NULL THEN
 		"INSERT INTO peer_route_", peerid, " SET ",
 		"peerid=?, networkb1=?, networkb2=?, networke1=?, networke2=?, netmask=?, ",
         "nexthopid=?, origin_as=?, communityid=?, ",
-        "lastupdate=FROM_UNIXTIME(?), flap_a=1, aspathlen=?, ",
+        "lastupdate=FROM_UNIXTIME(?), flap_a=1, aspathlen=?, nas=?, nnas=?, ",
 		"aspath0=?, aspath1=?, aspath2=?, aspath3=?, ",
         "aspath4=?, aspath5=?, aspath6=?, aspath7=?, ",
         "aspath8=?, aspath9=?, aspath10=?, aspath11=?, ",
         "aspath12=?, aspath13=?, aspath14=?, aspath15=? ",
 		"ON DUPLICATE KEY UPDATE ",
         "nexthopid=?, origin_as=?, communityid=?, ",
-        "lastupdate=FROM_UNIXTIME(?), flap_a=flap_a+1, aspathlen=?, ",
+        "lastupdate=FROM_UNIXTIME(?), flap_a=flap_a+1, aspathlen=?, nas=?, nnas=?, ",
 		"aspath0=?, aspath1=?, aspath2=?, aspath3=?, ",
         "aspath4=?, aspath5=?, aspath6=?, aspath7=?, ",
         "aspath8=?, aspath9=?, aspath10=?, aspath11=?, ",
@@ -1957,14 +2016,14 @@ ELSEIF network61 IS NOT NULL AND network62 IS NOT NULL THEN
 	EXECUTE stmt USING
 		@peerid, @network61, @network62, @network61e, @network62e, @netmask,
         @nexthopid, @origin_as, @communityid,
-        @timestamp, @aspathlen,
+        @timestamp, @aspathlen, @nas, @nnas,
         @aspath0, @aspath1, @aspath2, @aspath3,
         @aspath4, @aspath5, @aspath6, @aspath7,
         @aspath8, @aspath9, @aspath10, @aspath11,
         @aspath12, @aspath13, @aspath14, @aspath15,
         
 		@nexthopid, @origin_as, @communityid,
-        @timestamp, @aspathlen,
+        @timestamp, @aspathlen, @nas, @nnas,
         @aspath0, @aspath1, @aspath2, @aspath3,
         @aspath4, @aspath5, @aspath6, @aspath7,
         @aspath8, @aspath9, @aspath10, @aspath11,
@@ -1980,10 +2039,7 @@ ELSEIF network61 IS NOT NULL AND network62 IS NOT NULL THEN
 			"peerid=?, network1=?, network2=?, netmask=?, ",
 			"nexthopid=?, origin_as=?, communityid=?, ",
 			"timestamp=FROM_UNIXTIME(?), aspathlen=?, ",
-			"aspath0=?, aspath1=?, aspath2=?, aspath3=?, ",
-			"aspath4=?, aspath5=?, aspath6=?, aspath7=?, ",
-			"aspath8=?, aspath9=?, aspath10=?, aspath11=?, ",
-			"aspath12=?, aspath13=?, aspath14=?, aspath15=? "
+			"aspathbin=?"
 		);
         
 		PREPARE stmt FROM @query;
@@ -1992,10 +2048,7 @@ ELSEIF network61 IS NOT NULL AND network62 IS NOT NULL THEN
 			@peerid, @network61, @network62, @netmask,
 			@nexthopid, @origin_as, @communityid,
 			@timestamp, @aspathlen,
-			@aspath0, @aspath1, @aspath2, @aspath3,
-			@aspath4, @aspath5, @aspath6, @aspath7,
-			@aspath8, @aspath9, @aspath10, @aspath11,
-			@aspath12, @aspath13, @aspath14, @aspath15;
+			@aspathbin;
 		DEALLOCATE PREPARE stmt;
 
 
@@ -2162,4 +2215,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-11-04 22:40:34
+-- Dump completed on 2017-11-05 12:45:57
