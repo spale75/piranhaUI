@@ -51,8 +51,6 @@ while(!$global_stop) {
 				peer_log($p, "setting peer tables");
 				sqlquery($dbh,"CALL manage_peer(?,'create')", $p->{id});
 			}
-			peer_log(undef, "setting tables MRG_MyISAM tables");
-			sqlquery($dbh, "CALL manage_merge()");
 			peer_log(undef, "ready");
 	}
 
@@ -135,8 +133,6 @@ sub handle_peer {
 sub handle_file {
 	my($conf, $peer, $dbh, $file) = @_;
 
-	my $tbl = "peer_route" . ( defined $peer->{ip6} ? '6' : '' ) . '_' . ( $peer->{id} );
-
 	my $time_start = [gettimeofday];
 	my %stats;
 	my %dbstats;
@@ -170,8 +166,6 @@ sub handle_file {
 		my $e = from_json($_);
 
 		$msgcnt++;
-
-		#print Dumper($e);
 
 		$stats{$e->{type}}++;
 

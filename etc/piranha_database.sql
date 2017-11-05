@@ -96,7 +96,8 @@ CREATE TABLE `peer` (
   `flap_reset` datetime(3) DEFAULT NULL,
   `password` varchar(45) DEFAULT NULL,
   `descr` varchar(100) DEFAULT '',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_asn` (`asn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -336,8 +337,13 @@ CREATE TABLE `route4` (
   KEY `idx_validnetmask` (`valid`,`netmask`),
   KEY `idx_netmask` (`netmask`),
   KEY `idx_aslen` (`aspathlen`),
-  KEY `idx_nas` (`nas`,`nnas`,`peerid`)
-) ENGINE=MRG_MyISAM DEFAULT CHARSET=utf8 UNION=(`peer_route_1`,`peer_route_3`);
+  KEY `idx_nas` (`nas`,`nnas`,`peerid`),
+  KEY `idx_peervalidnasnnas` (`peerid`,`valid`,`nas`,`nnas`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+/*!50100 PARTITION BY LIST (peerid)
+(PARTITION part0 VALUES IN (0) ENGINE = InnoDB,
+ PARTITION part1 VALUES IN (1) ENGINE = InnoDB,
+ PARTITION part3 VALUES IN (3) ENGINE = InnoDB) */;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -407,8 +413,13 @@ CREATE TABLE `route6` (
   KEY `idx_validnetmask` (`valid`,`netmask`),
   KEY `idx_netmask` (`netmask`),
   KEY `idx_aslen` (`aspathlen`),
-  KEY `idx_nas` (`nas`,`nnas`,`peerid`)
-) ENGINE=MRG_MyISAM DEFAULT CHARSET=utf8 UNION=(`peer_route_2`,`peer_route_4`);
+  KEY `idx_nas` (`nas`,`nnas`,`peerid`),
+  KEY `idx_peervalidnasnnas` (`peerid`,`valid`,`nas`,`nnas`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+/*!50100 PARTITION BY LIST (peerid)
+(PARTITION part0 VALUES IN (0) ENGINE = InnoDB,
+ PARTITION part2 VALUES IN (2) ENGINE = InnoDB,
+ PARTITION part4 VALUES IN (4) ENGINE = InnoDB) */;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -541,8 +552,11 @@ CREATE TABLE `template_route4` (
   KEY `idx_validnetmask` (`valid`,`netmask`),
   KEY `idx_netmask` (`netmask`),
   KEY `idx_aslen` (`aspathlen`),
-  KEY `idx_nas` (`nas`,`nnas`,`peerid`)
-) ENGINE=BLACKHOLE DEFAULT CHARSET=utf8;
+  KEY `idx_nas` (`nas`,`nnas`,`peerid`),
+  KEY `idx_peervalidnasnnas` (`peerid`,`valid`,`nas`,`nnas`)
+) ENGINE=BLACKHOLE DEFAULT CHARSET=utf8
+/*!50100 PARTITION BY LIST (peerid)
+(PARTITION part0 VALUES IN (0) ENGINE = BLACKHOLE) */;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -612,8 +626,11 @@ CREATE TABLE `template_route6` (
   KEY `idx_validnetmask` (`valid`,`netmask`),
   KEY `idx_netmask` (`netmask`),
   KEY `idx_aslen` (`aspathlen`),
-  KEY `idx_nas` (`nas`,`nnas`,`peerid`)
-) ENGINE=BLACKHOLE DEFAULT CHARSET=utf8;
+  KEY `idx_nas` (`nas`,`nnas`,`peerid`),
+  KEY `idx_peervalidnasnnas` (`peerid`,`valid`,`nas`,`nnas`)
+) ENGINE=BLACKHOLE DEFAULT CHARSET=utf8
+/*!50100 PARTITION BY LIST (peerid)
+(PARTITION part0 VALUES IN (0) ENGINE = BLACKHOLE) */;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -920,7 +937,7 @@ DECLARE output VARCHAR(8192) DEFAULT '';
 DECLARE pos INTEGER UNSIGNED DEFAULT 0;
 DECLARE sep VARCHAR(1) DEFAULT '';
 
-WHILE pos < len
+WHILE pos < aspathlen
 DO
 	SET output = CONCAT(output, sep, CONV(HEX(SUBSTRING(aspathbin FROM (pos*4)+1 FOR 4)),16,10));
     SET sep = ' ';
@@ -1075,8 +1092,87 @@ DECLARE p15 VARBINARY(128) DEFAULT NULL;
 DECLARE len INTEGER UNSIGNED DEFAULT LENGTH(in_aspath) - LENGTH(REPLACE(in_aspath, ' ', '')) + 1;
 DECLARE pos INTEGER UNSIGNED DEFAULT 0;
 
+DECLARE nas  INTEGER UNSIGNED DEFAULT NULL;
+DECLARE nnas INTEGER UNSIGNED DEFAULT NULL;
+
+# result temporary table
+DROP TEMPORARY TABLE IF EXISTS subtree_temp;
+CREATE TEMPORARY TABLE subtree_temp (
+	aspath VARCHAR(1024),
+    cnt4 INT UNSIGNED DEFAULT 0,
+    cnt6 INT UNSIGNED DEFAULT 0,
+    tot  INT UNSIGNED DEFAULT 0,
+    PRIMARY KEY (aspath)
+);
+
+# optimisation for aspath up to 3 ASNs
+
+IF in_aspath IS NULL THEN
+
+    INSERT INTO subtree_temp (aspath,cnt4) (SELECT peer.asn,1 FROM peer WHERE ip4 IS NOT NULL)
+		ON DUPLICATE KEY UPDATE cnt4=cnt4+VALUES(cnt4);
+        
+    INSERT INTO subtree_temp (aspath,cnt6) (SELECT peer.asn,1 FROM peer WHERE ip6 IS NOT NULL)
+		ON DUPLICATE KEY UPDATE cnt6=cnt6+VALUES(cnt6);
+
+  
+ELSEIF len = 1 THEN
+	
+	INSERT INTO subtree_temp (aspath,cnt4)
+		(SELECT CONCAT(in_aspath,IF(r.nas IS NULL,'',' '),IFNULL(r.nas,'')), COUNT(valid)
+			FROM route4 r WHERE valid=1 AND peerid IN (SELECT id FROM peer WHERE asn = in_aspath) GROUP BY r.nas)
+	ON DUPLICATE KEY UPDATE cnt4=cnt4+VALUES(cnt4);
+	
+	INSERT INTO subtree_temp (aspath,cnt6)
+		(SELECT CONCAT(in_aspath,IF(r.nas IS NULL,'',' '),IFNULL(r.nas,'')), COUNT(valid)
+			FROM route6 r WHERE valid=1 AND peerid IN (SELECT id FROM peer WHERE asn = in_aspath) GROUP BY r.nas)
+	ON DUPLICATE KEY UPDATE cnt6=cnt6+VALUES(cnt6);
+
+ELSEIF len = 2 THEN
+
+	SET @peerasn = SUBSTRING_INDEX(in_aspath, ' ', 1);
+    SET @nas     = SUBSTRING_INDEX(in_aspath, ' ', -1);
+    
+	INSERT INTO subtree_temp (aspath,cnt4)
+		(SELECT show_aspath(IF(aspathlen>4,4,aspathlen),aspath0,aspath1,aspath2,aspath3,aspath4,aspath5,aspath6,aspath7,aspath8,aspath9,aspath10,aspath11,aspath12,aspath13,aspath14,aspath15), COUNT(valid)
+			FROM route4 r WHERE valid=1 AND r.nas = @nas AND r.nnas = @nnas AND peerid IN (SELECT id FROM peer WHERE asn = in_aspath) GROUP BY r.nas, r.nnas, aspath)
+	ON DUPLICATE KEY UPDATE cnt4=cnt4+VALUES(cnt4);
+    
+    INSERT INTO subtree_temp (aspath,cnt6)
+		(SELECT show_aspath(IF(aspathlen>4,4,aspathlen),aspath0,aspath1,aspath2,aspath3,aspath4,aspath5,aspath6,aspath7,aspath8,aspath9,aspath10,aspath11,aspath12,aspath13,aspath14,aspath15), COUNT(valid)
+			FROM route6 r WHERE valid=1 AND r.nas = @nas AND r.nnas = @nnas AND peerid IN (SELECT id FROM peer WHERE asn = in_aspath) GROUP BY r.nas, r.nnas, aspath)
+	ON DUPLICATE KEY UPDATE cnt6=cnt6+VALUES(cnt6);
+
+ELSEIF len = 3 THEN
+
+	SET @peerasn = SUBSTRING_INDEX(in_aspath, ' ', 1);
+    SET @nas     = SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', 2),' ', -1);
+    SET @nnas    = SUBSTRING_INDEX(in_aspath, ' ', -1);
+    
+    SELECT @peerasn, @nas, @nnas;
+
+	INSERT INTO subtree_temp (aspath,cnt4)
+		(SELECT CONCAT(in_aspath,IF(r.nas IS NULL,'',' '),IFNULL(r.nas,''), IF(r.nnas IS NULL, '',' '), IFNULL(r.nnas,'')), COUNT(valid)
+			FROM route4 r WHERE valid=1 AND r.nas = @nas AND peerid IN (SELECT id FROM peer WHERE asn = in_aspath) GROUP BY r.nas, r.nnas)
+	ON DUPLICATE KEY UPDATE cnt4=cnt4+VALUES(cnt4);
+    
+    INSERT INTO subtree_temp (aspath,cnt6)
+		(SELECT CONCAT(in_aspath,IF(r.nas IS NULL,'',' '),IFNULL(r.nas,''), IF(r.nnas IS NULL, '',' '), IFNULL(r.nnas,'')), COUNT(valid)
+			FROM route6 r WHERE valid=1 AND r.nas = @nas AND peerid IN (SELECT id FROM peer WHERE asn = in_aspath) GROUP BY r.nas, r.nnas)
+	ON DUPLICATE KEY UPDATE cnt6=cnt6+VALUES(cnt6);
+
+
+ELSE
+
+
 WHILE pos < len DO
 	SET @asn = LOWER(LPAD(HEX(0+SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', pos+1),' ', -1)),8,'0'));
+    
+    IF pos = 2 THEN
+		SET nas = @asn;
+	ELSEIF pos = 3 THEN
+		SET nnas = @asn;
+	END IF;
 
 	IF pos/16 < 1 THEN
 		SET p0 = CONCAT(IFNULL(p0,''), @asn);
@@ -1158,24 +1254,42 @@ SET @q = CONCAT(
     "aspath4, aspath5, aspath6, aspath7, ",
     "aspath8, aspath9, aspath10, aspath11, ",
     "aspath12, aspath13, aspath14, aspath15 ) AS aspath ",
-    "FROM route4 FORCE INDEX (",@index,") ",
+    "FROM route4 ", IF(len>4,CONCAT("FORCE INDEX (",@index,") "),''),
     "WHERE ",
+    IF(nas IS NULL,'', CONCAT("nas = ",nas)), " ",
+    IF(nas IS NOT NULL,"AND ",''),
+    IF(nnas IS NULL,'', CONCAT("nnas = ",nnas)), " ",
+    IF(nnas IS NOT NULL,"AND ",''),
     "(aspath0 LIKE ? OR (1=?) ) AND (aspath1 LIKE ? OR (1=?) ) AND (aspath2 LIKE ? OR (1=?) ) AND (aspath3 LIKE ? OR (1=?) ) AND ",
     "(aspath4 LIKE ? OR (1=?) ) AND (aspath5 LIKE ? OR (1=?) ) AND (aspath6 LIKE ? OR (1=?) ) AND (aspath7 LIKE ? OR (1=?) ) AND ",
     "(aspath8 LIKE ? OR (1=?) ) AND (aspath9 LIKE ? OR (1=?) ) AND (aspath10 LIKE ? OR (1=?) ) AND (aspath11 LIKE ? OR (1=?) ) AND ",
     "(aspath12 LIKE ? OR (1=?) ) AND (aspath13 LIKE ? OR (1=?) ) AND (aspath14 LIKE ? OR (1=?) ) AND (aspath15 LIKE ? OR (1=?) ) AND "
 	"valid=1 ",
 	"GROUP BY aspath ORDER BY cnt DESC LIMIT ", lim);
-        
+
+SELECT @q;
 PREPARE stmt FROM @q;
 EXECUTE stmt USING
 	@p0, @i0, @p1, @i1, @p2, @i2, @p3, @i3,
     @p4, @i4, @p5, @i5, @p6, @i6, @p7, @i7,
     @p8, @i8, @p9, @i9, @p10, @i10, @p11, @i11,
     @p12, @i12, @p13, @i13, @p14, @i14, @p15, @i15;
-
 DEALLOCATE PREPARE stmt;
 
+SET @q = CONCAT("EXPLAIN ", @q);
+PREPARE stmt FROM @q;
+EXECUTE stmt USING
+	@p0, @i0, @p1, @i1, @p2, @i2, @p3, @i3,
+    @p4, @i4, @p5, @i5, @p6, @i6, @p7, @i7,
+    @p8, @i8, @p9, @i9, @p10, @i10, @p11, @i11,
+    @p12, @i12, @p13, @i13, @p14, @i14, @p15, @i15;
+SHOW WARNINGS;
+DEALLOCATE PREPARE stmt;
+
+END IF;
+
+UPDATE subtree_temp SET tot=cnt4+cnt6;
+SELECT * FROM subtree_temp ORDER BY tot DESC LIMIT lim;
 
 END ;;
 DELIMITER ;
@@ -1604,68 +1718,6 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `manage_merge` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8 */ ;
-/*!50003 SET character_set_results = utf8 */ ;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `manage_merge`()
-BEGIN
-
-DECLARE cur_done	INT DEFAULT FALSE;
-DECLARE peerid		INT UNSIGNED DEFAULT NULL;
-DECLARE peerproto	TINYINT UNSIGNED DEFAULT NULL;
-DECLARE cur			CURSOR FOR SELECT id, IF(ip4,4,IF(ip6,6,0)) AS proto FROM peer;
-
-DECLARE CONTINUE HANDLER FOR NOT FOUND SET cur_done = TRUE;
-
-OPEN cur;
-
-SET @tbl4 = "";
-SET @tbl6 = "";
-
-MYLOOP: LOOP
-	
-    FETCH cur INTO peerid, peerproto;
-    IF cur_done THEN LEAVE MYLOOP; END IF;
-    
-    IF peerproto=4 THEN
-		SET @tbl4 = CONCAT(@tbl4, "peer_route_", peerid, ", ");
-	ELSEIF peerproto=6 THEN
-		SET @tbl6 = CONCAT(@tbl6, "peer_route_", peerid, ", ");
-	END IF;
-    
-END LOOP;
-
-SET @tbl4 = SUBSTRING(@tbl4 FROM 1 FOR LENGTH(@tbl4) - 2);
-SET @tbl6 = SUBSTRING(@tbl6 FROM 1 FOR LENGTH(@tbl6) - 2);
-
-IF LENGTH(@tbl4) THEN
-	DROP TABLE IF EXISTS route4;
-	CREATE TABLE route4 LIKE template_route4;
-	SET @q = CONCAT("ALTER TABLE route4 ENGINE=MRG_MyISAM UNION(", @tbl4, ")");
-	PREPARE stmt FROM @q; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-END IF;
-
-IF LENGTH(@tbl6) THEN
-	DROP TABLE IF EXISTS route6;
-	CREATE TABLE route6 LIKE template_route6;
-	SET @q = CONCAT("ALTER TABLE route6 ENGINE=MRG_MyISAM UNION(", @tbl6, ")");
-	PREPARE stmt FROM @q; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-END IF;
-
-
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `manage_peer` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -1682,6 +1734,7 @@ BEGIN
 DECLARE peerproto TINYINT UNSIGNED DEFAULT 0;
 DECLARE error VARCHAR(255) DEFAULT NULL;
 
+DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET error = NULL;
 
 SELECT IF(ip4 IS NOT NULL, 4, IF(ip6 IS NOT NULL, 6, 0)) INTO peerproto FROM peer WHERE id = peerid;
 
@@ -1690,23 +1743,29 @@ IF action = "create" THEN
 	
     IF peerproto > 0 THEN
     
-        SET @q = CONCAT("CREATE TABLE IF NOT EXISTS peer_route_", peerid, " LIKE template_route", peerproto);
-		PREPARE stmt FROM @q; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-		IF @@warning_count = 0 THEN
-			SET @q = CONCAT("ALTER TABLE peer_route_", peerid, " ENGINE=MyISAM");
-			PREPARE stmt FROM @q; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+		SET @q = CONCAT("CREATE TABLE IF NOT EXISTS route", peerproto, " LIKE template_route", peerproto);
+		PREPARE stmt FROM @q; EXECUTE stmt;
+        
+        IF @@warning_count = 0 THEN
+			SET @q = CONCAT("ALTER TABLE route", peerproto, " ENGINE=InnoDB");
+			PREPARE stmt2 FROM @q; EXECUTE stmt2; DEALLOCATE PREPARE stmt2;
 		END IF;
-
+        
+        DEALLOCATE PREPARE stmt;
+		
+        SET @q = CONCAT("ALTER TABLE route", peerproto, " ADD PARTITION ( PARTITION part", peerid, " VALUES IN (",peerid,") )");
+		PREPARE stmt FROM @q; BEGIN EXECUTE stmt; END; DEALLOCATE PREPARE stmt;
+		       
+        
         SET @q = CONCAT("CREATE TABLE IF NOT EXISTS peer_rbuf_", peerid, " LIKE template_rbuf", peerproto);
-		PREPARE stmt FROM @q; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+		PREPARE stmt FROM @q; EXECUTE stmt;
 
 		IF @@warning_count = 0 THEN
 			SET @q = CONCAT("ALTER TABLE peer_rbuf_", peerid, " ENGINE=MEMORY");
-			PREPARE stmt FROM @q; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+			PREPARE stmt2 FROM @q; EXECUTE stmt2; DEALLOCATE PREPARE stmt2;
 		END IF;
-        
-        CALL manage_merge();
+		
+        DEALLOCATE PREPARE stmt;
     
     ELSE
     
@@ -1718,11 +1777,9 @@ ELSEIF action = "delete" THEN
 	
     IF peerproto = 0 THEN
     
-		CALL manage_merge();
+        SET @q = CONCAT("ALTER TABLE route", peerproto, " DROP PARTITION part", peerid);
+        PREPARE stmt FROM @q; BEGIN EXECUTE stmt; END; DEALLOCATE PREPARE stmt;
         
-		SET @q = CONCAT("DROP TABLE IF EXISTS peer_route_", peerid);
-		PREPARE stmt FROM @q; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
 		SET @q = CONCAT("DROP TABLE IF EXISTS peer_rbuf_", peerid);
 		PREPARE stmt FROM @q; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
@@ -1736,8 +1793,11 @@ ELSEIF action = "reset" THEN
 	
     IF peerproto > 0 THEN
     	
-        SET @q = CONCAT("TRUNCATE TABLE peer_route_", peerid);
-		PREPARE stmt FROM @q; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+        SET @q = CONCAT("ALTER TABLE route", peerproto, " DROP PARTITION part", peerid);
+        PREPARE stmt FROM @q; BEGIN EXECUTE stmt; END; DEALLOCATE PREPARE stmt;
+        
+        SET @q = CONCAT("ALTER TABLE route", peerproto, " ADD PARTITION ( PARTITION part", peerid, " VALUES IN (",peerid,") )");
+		PREPARE stmt FROM @q; BEGIN EXECUTE stmt; END; DEALLOCATE PREPARE stmt;
         
         SET @q = CONCAT("TRUNCATE TABLE peer_rbuf_", peerid);
 		PREPARE stmt FROM @q; EXECUTE stmt; DEALLOCATE PREPARE stmt;
@@ -1920,7 +1980,7 @@ END IF;
 IF network4 IS NOT NULL THEN
     
 	SET @query = CONCAT(
-		"INSERT INTO peer_route_", peerid, " SET ",
+		"INSERT INTO route4 SET ",
 		"peerid=?, networkb=?, networke=?, netmask=?, ",
         "nexthopid=?, origin_as=?, communityid=?, ",
         "lastupdate=FROM_UNIXTIME(?), flap_a=1, aspathlen=?, nas=?, nnas=?, ",
@@ -1988,7 +2048,7 @@ IF network4 IS NOT NULL THEN
 ELSEIF network61 IS NOT NULL AND network62 IS NOT NULL THEN
 
 	SET @query = CONCAT(
-		"INSERT INTO peer_route_", peerid, " SET ",
+		"INSERT INTO route6 SET ",
 		"peerid=?, networkb1=?, networkb2=?, networke1=?, networke2=?, netmask=?, ",
         "nexthopid=?, origin_as=?, communityid=?, ",
         "lastupdate=FROM_UNIXTIME(?), flap_a=1, aspathlen=?, nas=?, nnas=?, ",
@@ -2121,7 +2181,7 @@ END IF;
 -- peer table MUST exist
 IF @network4 IS NOT NULL THEN
     
-	SET @query = CONCAT("UPDATE peer_route_", peerid, " SET valid = 0, flap_w = flap_w+1, lastupdate = FROM_UNIXTIME(?) WHERE networkb = ? AND netmask = ?");
+	SET @query = CONCAT("UPDATE route4 SET valid = 0, flap_w = flap_w+1, lastupdate = FROM_UNIXTIME(?) WHERE networkb = ? AND netmask = ?");
 	PREPARE stmt FROM @query;
 	EXECUTE stmt USING @timestamp, @network4, @netmask;
     DEALLOCATE PREPARE stmt;
@@ -2140,7 +2200,7 @@ IF @network4 IS NOT NULL THEN
 
 ELSEIF @network61 IS NOT NULL AND @network62 IS NOT NULL THEN
 
-	SET @query = CONCAT("UPDATE peer_route_", peerid, " SET valid = 0, flap_w = flap_w+1, lastupdate = FROM_UNIXTIME(?) WHERE networkb1 = ? AND networkb2 = ? AND netmask = ?");
+	SET @query = CONCAT("UPDATE route6 SET valid = 0, flap_w = flap_w+1, lastupdate = FROM_UNIXTIME(?) WHERE networkb1 = ? AND networkb2 = ? AND netmask = ?");
 	PREPARE stmt FROM @query;
 	EXECUTE stmt USING @timestamp, @network61, @network62, @netmask;
     DEALLOCATE PREPARE stmt;
@@ -2215,4 +2275,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-11-05 12:45:57
+-- Dump completed on 2017-11-05 16:12:51

@@ -15,6 +15,7 @@ my %conf = (
 			inet_ntoa(ip4) AS ip4,
 			ip6,
 			IF(ip4 IS NULL,ip6,inet_ntoa(ip4)) AS ip,
+			IF(ip4 IS NOT NULL, '4', IF(ip6 IS NOT NULL, '6', NULL)) AS proto,
 			asn,
 			lastupdate,
 			easytime(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3)) - UNIX_TIMESTAMP(lastupdate)) AS deltanow,
@@ -224,7 +225,7 @@ sub mode_peerlist {
 	my $q = sqlquery($dbh,$conf{peer_query} . " ORDER BY id");
 	while(my $p = $q->fetchrow_hashref()) {
 		my $cnt = 0;
-		my $q2 = sqlquery($dbh, "SELECT COUNT(valid) AS routes FROM peer_route_$p->{id} WHERE valid=1");
+		my $q2 = sqlquery($dbh, "SELECT COUNT(valid) AS routes FROM route$p->{proto} WHERE valid=1 AND peerid = ?",$p->{id});
 		while(my @c = $q2->fetchrow_array()) { $cnt = $c[0]; }
 		$p->{routes} = $cnt;
 		push @{$j->{peer}}, $p;
@@ -238,21 +239,16 @@ sub mode_peer {
 
 	my $q = sqlquery($dbh,$conf{peer_query}." WHERE id = ?", $var->{peerid});
 	while(my $p = $q->fetchrow_hashref()) {
-		my $tbl = 'peer_route_' . $p->{id};
+		my $tbl = 'route' . $p->{proto};
 
-		my $x = sqlone($dbh,"SHOW TABLES LIKE ?", $tbl);
+		my $valid   = sqlone($dbh,"SELECT COUNT(valid) AS cnt FROM $tbl WHERE valid=1 AND peerid=?", $p->{id});
+		my $invalid = sqlone($dbh,"SELECT COUNT(valid) AS cnt FROM $tbl WHERE valid=0 AND peerid=?", $p->{id});
 
-		if ( keys %{$x} ) {
+		my $q2 = sqlquery($dbh,"SELECT COUNT(valid) AS cnt, netmask FROM $tbl WHERE valid=1 AND peerid=? GROUP BY netmask", $p->{id});
+		while(my $m = $q2->fetchrow_hashref()) { $p->{mask}{$m->{netmask}}=$m->{cnt}; }
 
-			my $valid   = sqlone($dbh,"SELECT COUNT(valid) AS cnt FROM $tbl WHERE valid=1");
-			my $invalid = sqlone($dbh,"SELECT COUNT(valid) AS cnt FROM $tbl WHERE valid=0");
-
-			my $q2 = sqlquery($dbh,"SELECT COUNT(valid) AS cnt, netmask FROM $tbl WHERE valid=1 GROUP BY netmask");
-			while(my $m = $q2->fetchrow_hashref()) { $p->{mask}{$m->{netmask}}=$m->{cnt}; }
-
-			$p->{route}{valid}   = exists $valid->{cnt}   ? $valid->{cnt}   : 0;
-			$p->{route}{invalid} = exists $invalid->{cnt} ? $invalid->{cnt} : 0;
-		}
+		$p->{route}{valid}   = exists $valid->{cnt}   ? $valid->{cnt}   : 0;
+		$p->{route}{invalid} = exists $invalid->{cnt} ? $invalid->{cnt} : 0;
 		$j->{peer} = $p;
 	}
 	return $j;

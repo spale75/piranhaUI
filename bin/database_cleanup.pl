@@ -33,7 +33,7 @@ EOF
 while(<STDIN>) { last; }
 
 # delete tables
-foreach my $wild (qw(peer_route_% peer_rbuf_% route4 route6)) {
+foreach my $wild (qw(peer_rbuf_% route4 route6)) {
 	my $q = sqlquery($dbh,"SHOW TABLES LIKE '$wild'");
 	while(my @x = $q->fetchrow_array()) {
 		print "DROP		$x[0]\n";
