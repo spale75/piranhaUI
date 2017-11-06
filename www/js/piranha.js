@@ -380,7 +380,7 @@ var piranha = {
 
 					$('.piranha_event_row:not(:first)').remove();
 
-					for(var i=0; i<d.event.length; i++) {
+					for(var i=0; i<d.event.length & i<10; i++) {
 						row = $(".piranha_event_row").first().clone().removeClass("hide");
 						piranha.autofill(row, d.event[i]);
 						$('.piranha_event_row').parent().append(row);
@@ -600,7 +600,7 @@ var piranha = {
 
 			"vis": {
 				"bgp_updates": function(gconf) {
-
+	
 					$.getJSON(piranha.helper.url(piranha.conf.cgi, { "mode": "vis_bgp_updates", "proto": gconf.proto }))
 					.done(function(d) {
 						piranha.spinner(false);
@@ -679,7 +679,7 @@ var piranha = {
 									edges: {
 										scaling: {
 											min: 1,
-											max: 20
+											max: 10
 										},
 									},
 								},
@@ -694,7 +694,8 @@ var piranha = {
 								id: asn,
 								value: d.nodes[asn].routes,
 								label: "AS"+asn,
-								shape: 'database',
+								shape: 'circle',
+								shadow: { enabled: true },
 							}]);
 
 							div.nodes[asn] = {
@@ -762,14 +763,17 @@ var piranha = {
 						for(var asn in d.vis.nodes) {
 							var mynode = d.vis.nodes[asn];
 
-							if ( n.nodes[asn] )
+							if ( n.nodes[asn] ) {
 								continue;
+							}
 
 							newnodes.push({
 								id    : asn,
 								value : mynode.routes,
 								label : "AS"+asn,
-								shape : 'ellipse',
+								title : mynode.aspath,
+								shape : 'box',
+								shadow: { enabled: true },
 							});
 							n.nodes[asn] = {
 								pagesize: 10,
@@ -783,7 +787,7 @@ var piranha = {
 							var dst = srcdst.split('-')[1];	
 							var obj = d.vis.edges[srcdst];
 							var color = obj.cnt4>0 && obj.cnt6>0  ? '#49B864' : ( obj.cnt4>0 ? '#F5AC59' : '#48C0DC' );
-
+						
 							if ( obj.cnt4>0 ) {
 								newedges.push({
 									id   : srcdst + '-4',
@@ -792,6 +796,8 @@ var piranha = {
 									value: obj.cnt4,
 									title: obj.cnt4+" IPv4 routes",
 									color: { color: '#F5AC59' },
+									arrows: { to: { enabled: true } },
+									arrowStrikethrough: false,
 								});
 							}
 
@@ -803,6 +809,8 @@ var piranha = {
 									value: obj.cnt6,
 									title: obj.cnt6+" IPv6 routes",
 									color: { color: '#49B864' },
+									arrows: { to: { enabled: true } },
+									arrowStrikethrough: false,
 								});
 							}
 
@@ -811,7 +819,7 @@ var piranha = {
 						if ( newnodes.length )
 							n.vis.nodes.add(newnodes);
 
-						if ( newnodes.length )
+						if ( newedges.length )
 							n.vis.edges.add(newedges);
 
 					})
@@ -819,49 +827,6 @@ var piranha = {
 						var err = textStatus + ": " + error;
 						console.log( "Request Failed: " + err );
 					});
-				},
-				"demo3d": function() {
-
-					var data = new vis.DataSet();
-					var counter = 0;
-					var steps = 50;
-			   		var axisMax = 359;
-					var axisStep = axisMax / steps;
-					for (var x = 0; x < axisMax; x+=axisStep) {
-						for (var y = 0; y < axisMax; y+=axisStep) {
-							var value = (Math.sin(x/50) * Math.cos(y/50) * 50 + 50);
-							data.add({id:counter++,x:x,y:y,z:value,style:value});
-						}
-					}
-
-					var wmin = 200;
-					var wmax = 1000;
-					var w = $(window).width() - 200;
-
-					if ( w < wmin )
-						w=wmin;
-					else if ( w > wmax )
-						w=wmax;
-
-					h = Math.floor(w * .80);
-				
-
-					// specify options
-					var options = {
-						width:  '100%',
-						height: '800px',
-						style: 'surface',
-						showPerspective: true,
-						showGrid: true,
-						showShadow: false,
-						keepAspectRatio: true,
-						verticalRatio: 0.5
-					};
-	
-					// Instantiate our graph object.
-					var container = document.getElementById('piranha_vis');
-					var graph3d = new vis.Graph3d(container, data, options);
-	
 				},
 			},
 		},

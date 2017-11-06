@@ -7,3 +7,4 @@ query_cache_type=1
 query_cache_size=134217728
 myisam_use_mmap=ON
 key_buffer_size=134217728
+event_scheduler=ON
