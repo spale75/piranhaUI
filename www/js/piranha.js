@@ -669,44 +669,64 @@ var piranha = {
 					});
 				},
 				"border_paths": function(gconf) {
-					$.getJSON(piranha.helper.url(piranha.conf.cgi, { "mode": "vis_border_paths", "limit": 100 }))
+					$.getJSON(piranha.helper.url(piranha.conf.cgi, { "mode": "vis_border_paths", "aspath": null, "pagesize": 10, "page": 0 }))
 					.done(function(d) {
 						d = d.vis;
-						var data = { nodes: [ ], edges: [ ] };
-
-						for (var asn in d.nodes) {
-							data.nodes.push({id: asn, value: d.nodes[asn], label: "AS"+asn});
-						}
-
-						for (var src in d.edges) {
-							for (var dst in d.edges[src]) {
-								var cnt   = d.edges[src][dst]['cnt'];
-								var proto = d.edges[src][dst]['proto'];
-								var color = proto == 10 ? '#49B864' : ( proto == 4 ? '#F5AC59' : '#48C0DC' );
-								data.edges.push({
-									from: src,
-									to: dst,
-									value: cnt,
-									title: cnt + ' routes',
-									color: {
-										color: color,
+						var div = {
+							nodes: { },
+							vis: {
+								options: {
+									edges: {
+										scaling: {
+											min: 1,
+											max: 20
+										},
 									},
-								});
-							}
-						}
-						var options = {
-							edges: {
-								scaling: {
-									min: 1,
-									max: 20,
 								},
+								nodes : new vis.DataSet(),
+								edges : new vis.DataSet(),
+								net   : null
 							},
 						};
-						console.log("data",data);
-						network = new vis.Network(document.getElementById('piranha_vis'), data, options);
-						network.on('click', function(e) {
-							piranha.footinfo.lookup(e.nodes[0]);
+
+						for (var asn in d.nodes) {
+							div.vis.nodes.add([{
+								id: asn,
+								value: d.nodes[asn].routes,
+								label: "AS"+asn,
+								shape: 'database',
+							}]);
+
+							div.nodes[asn] = {
+								aspath: d.nodes[asn].aspath,
+								pagesize: 10,
+								page: 0
+							};
+						}
+
+						div.vis.net = new vis.Network(document.getElementById('piranha_vis'), { nodes: div.vis.nodes, edges: div.vis.edges }, div.vis.options);
+						div.vis.net.on('click', function(e) {
+							console.log("click", e);
+							if ( e.nodes.length>0 ) {
+								if ( piranha.var.vis_to ) {
+									clearTimeout(piranha.var.vis_to);
+									piranha.var.vis_to = null;
+								}
+								else {
+									piranha.var.vis_to = setTimeout(function() {
+										piranha.var.vis_to = null;
+										piranha.footinfo.lookup(e.nodes[0]);
+									}, 500);
+								}
+							}
 						});
+						div.vis.net.on('doubleClick', function(e) {
+							if ( e.nodes.length>0 ) {
+								piranha.page.vis.vis.border_paths_more(e.nodes[0]);
+							}
+						});
+
+						$('#piranha_vis').data('piranha', div);
 						
 					})
 					.fail(function(jqxhr, textStatus, error) {
@@ -715,6 +735,90 @@ var piranha = {
 					});
 
 
+				},
+				"border_paths_more": function(oasn) {
+					var n = $('#piranha_vis').data('piranha');
+
+					if ( ! n.nodes[oasn] ) { return; }
+					if ( ! n.nodes[oasn].aspath ) { return; }
+
+					n.nodes[oasn].page += 1;
+
+					console.log(n);
+
+					piranha.spinner(true);
+					$.getJSON(piranha.helper.url( piranha.conf.cgi, {
+							"mode"    : "vis_border_paths",
+							"aspath"  : n.nodes[oasn].aspath,
+							"pagesize": n.nodes[oasn].pagesize,
+							"page"    : n.nodes[oasn].page-1 }))
+					.done(function(d) {
+						piranha.spinner(false);
+
+						console.log(d);
+						var newnodes = [ ];
+						var newedges = [ ];
+
+						for(var asn in d.vis.nodes) {
+							var mynode = d.vis.nodes[asn];
+
+							if ( n.nodes[asn] )
+								continue;
+
+							newnodes.push({
+								id    : asn,
+								value : mynode.routes,
+								label : "AS"+asn,
+								shape : 'ellipse',
+							});
+							n.nodes[asn] = {
+								pagesize: 10,
+								page: 0,
+								aspath: mynode.aspath,
+							};
+						}
+
+						for(var srcdst in d.vis.edges) {
+							var src = srcdst.split('-')[0];	
+							var dst = srcdst.split('-')[1];	
+							var obj = d.vis.edges[srcdst];
+							var color = obj.cnt4>0 && obj.cnt6>0  ? '#49B864' : ( obj.cnt4>0 ? '#F5AC59' : '#48C0DC' );
+
+							if ( obj.cnt4>0 ) {
+								newedges.push({
+									id   : srcdst + '-4',
+									from : src,
+									to   : dst,
+									value: obj.cnt4,
+									title: obj.cnt4+" IPv4 routes",
+									color: { color: '#F5AC59' },
+								});
+							}
+
+							if ( obj.cnt6>0 ) {
+								newedges.push({
+									id   : srcdst + '-6',
+									from : src,
+									to   : dst,
+									value: obj.cnt6,
+									title: obj.cnt6+" IPv6 routes",
+									color: { color: '#49B864' },
+								});
+							}
+
+						}
+
+						if ( newnodes.length )
+							n.vis.nodes.add(newnodes);
+
+						if ( newnodes.length )
+							n.vis.edges.add(newedges);
+
+					})
+					.fail(function(jqxhr, textStatus, error) {
+						var err = textStatus + ": " + error;
+						console.log( "Request Failed: " + err );
+					});
 				},
 				"demo3d": function() {
 

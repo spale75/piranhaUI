@@ -74,7 +74,7 @@ my %conf = (
 		},
 		'vis_border_paths' => {
 			func => \&mode_vis_border_paths,
-			dep => [ 'limit' ],
+			dep => [ 'aspath', 'page', 'pagesize' ],
 		},
 	},
 	
@@ -83,6 +83,7 @@ my %conf = (
 		modulo => '^\d+$',
 		action => '^(get|set)$',
 		asn    => '^\d+$',
+		aspath => '^(\d+( \d+)*|null)$',
 		list   => '^(flaps|long_aspath|invalid_asn)$',
 		valid  => '^(true|false)$',
 		invalid=> '^(true|false)$',
@@ -480,15 +481,15 @@ sub mode_top100 {
 			my($peerid, $network, $netmask) = split(/-/,$k);
 			my @net = split(/:/,$network);
 			$q = sqlquery($dbh, "SELECT * FROM view_$tbl WHERE peer_id=? AND $rnetq AND route_netmask=? $avalid", $peerid, @net, $netmask);
-			while(my $x = $q->fetchrow_hashref()) { clean_aspath($x); push @{$j->{route}}, $x; }
+			while(my $x = $q->fetchrow_hashref()) { push @{$j->{route}}, $x; }
 			$cnt++;
 		}
 	}
 	elsif ( $var->{list} eq 'long_aspath' ) {
 		my $q = sqlquery($dbh, "
 				SELECT peerid, $net, netmask
-				FROM $tbl
-				ORDER BY aspathlen DESC
+				FROM $tbl LEFT JOIN aspath ON $tbl.aspathid = aspath.id
+				ORDER BY aslen DESC
 				LIMIT ?,?",
 				$var->{pagesize} * $var->{page}, $var->{pagesize});
 		while(my @x = $q->fetchrow_array()) {
@@ -634,13 +635,20 @@ sub mode_vis_bgp_updates {
 sub mode_vis_border_paths {
 	my($dbh, $var) = @_;
 
+	$var->{aspath} = undef if $var->{aspath} eq 'null';
+
 	my $j = { 'vis' => { } };
 
-	my $q = sqlquery($dbh, "CALL vis_border_paths(?)", $var->{limit});
+	my $q = sqlquery($dbh, "CALL get_aspath_subtree(?,?,?)", $var->{aspath}, $var->{pagesize}, $var->{page});
 	while(my $b = $q->fetchrow_hashref()) {
-		$j->{vis}{nodes}{$b->{src}} = 1;
-		$j->{vis}{nodes}{$b->{dst}} = 0;
-		$j->{vis}{edges}{$b->{src}}{$b->{dst}} = { cnt => $b->{cnt}, proto => $b->{proto} };
+		my @aspath = split(/ /, $b->{aspath});
+		$j->{vis}{nodes}{$aspath[-1]} = { routes => $b->{tot}, aspath => $b->{aspath} };
+		if ( $aspath[-2] ) {
+			$j->{vis}{edges}{$aspath[-2]."-".$aspath[-1]} = {
+				cnt4 => $b->{cnt4},
+				cnt6 => $b->{cnt6},
+			};
+		}
 	}
 	return $j;
 }
