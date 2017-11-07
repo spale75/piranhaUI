@@ -46,7 +46,7 @@ body {
 	overflow-y: auto;
 }
 
-@media only screen and (min-width: 1400px) { .container { width: 1400px; } }
-@media only screen and (min-width: 1500px) { .container { width: 1500px; } }
-@media only screen and (min-width: 1600px) { .container { width: 1600px; } }
-@media only screen and (min-width: 1700px) { .container { width: 1700px; } }
+@media only screen and (min-width: 1400px) { .container { width: 1300px; } }
+@media only screen and (min-width: 1500px) { .container { width: 1400px; } }
+@media only screen and (min-width: 1600px) { .container { width: 1500px; } }
+@media only screen and (min-width: 1700px) { .container { width: 1600px; } }
