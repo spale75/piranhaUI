@@ -707,7 +707,6 @@ var piranha = {
 
 						div.vis.net = new vis.Network(document.getElementById('piranha_vis'), { nodes: div.vis.nodes, edges: div.vis.edges }, div.vis.options);
 						div.vis.net.on('click', function(e) {
-							console.log("click", e);
 							if ( e.nodes.length>0 ) {
 								if ( piranha.var.vis_to ) {
 									clearTimeout(piranha.var.vis_to);
