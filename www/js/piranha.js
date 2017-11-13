@@ -248,14 +248,16 @@ var piranha = {
 				var data = { };
 				var pdata = { };
 				var total = 0;
+				var cmask;
+
 				for(var mask in d.global.ipv4.mask) {
-					var cmask = piranha.helper.cleanvalue.netmask4(mask);
+					cmask = piranha.helper.cleanvalue.netmask4(mask);
 					if ( ! cmask ) { continue; }
 					data[cmask] = Math.floor(d.global.ipv4.mask[cmask] / d.global.ipv4.valid * 10000)/100;
 					total += d.global.ipv4.mask[cmask] * Math.pow(2,8-cmask);
 				}
 				for(var mask in d.global.ipv4.mask) {
-					var cmask = piranha.helper.cleanvalue.netmask4(mask);
+					cmask = piranha.helper.cleanvalue.netmask4(mask);
 					if ( ! cmask ) { continue; }
 					pdata[cmask] = Math.floor(d.global.ipv4.mask[cmask] * Math.pow(2,8-cmask) / total * 10000)/100;
 				}
@@ -267,13 +269,13 @@ var piranha = {
 				pdata = { };
 				total = 0;
 				for(var mask in d.global.ipv6.mask) {
-					var cmask = piranha.helper.cleanvalue.netmask6(mask);
+					cmask = piranha.helper.cleanvalue.netmask6(mask);
 					if ( ! cmask ) { continue; }
 					data[cmask] = Math.floor(d.global.ipv6.mask[cmask] / d.global.ipv6.valid * 10000)/100;
 					total += d.global.ipv6.mask[cmask] * Math.pow(2,32-cmask);
 				}
 				for(var mask in d.global.ipv6.mask) {
-					var cmask = piranha.helper.cleanvalue.netmask6(mask);
+					cmask = piranha.helper.cleanvalue.netmask6(mask);
 					if ( ! cmask ) { continue; }
 					pdata[cmask] = Math.floor(d.global.ipv6.mask[cmask] * Math.pow(2, 32-cmask) / total * 10000)/100;
 				}
