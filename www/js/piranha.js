@@ -66,10 +66,12 @@ var piranha = {
 		switch(set) {
 			// Don't overcomplicate things ...
 			case "asn"   : return str.match(/^\d{1,10}$/);
-			case "aspath": return str.match(/^\d{1,10}( \d{1,10})*$/);
+			case "aspath": return str.match(/^\d{1,10}( \d{1,10}){0,254}$/);
 			// CIDR IPv4/IPv6 regex from regexpal.com
 			case "ip4"   : return str.match(/^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$/);
-			case "ip6"   : return str.match(/^s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?s*(\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?$/);
+			case "ip6"   : return str.match(/^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?(\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?$/);
+			// case "ip6old"   : return str.match(/^s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?s*(\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?$/);
+			default: break;
 		}
 		return null;
 	},
@@ -77,7 +79,7 @@ var piranha = {
 	"init": function() {
 
 		window.onhashchange = this.pageevent;
-	
+
 		var spin = new Spinner(this.conf.loading_spinner).spin();
 		$("#piranha_loading_spin").html(spin.el);
 	
@@ -162,15 +164,18 @@ var piranha = {
 
 			piranha.helper.resize();
 
-			if ( piranha.page[newpage] ) {
-				if ( piranha.page[newpage].init ) {
-					piranha.page[newpage].init(subpage);
-				}
-				else {
-					piranha.page[newpage](subpage);
+			for(var page in piranha.page) {
+				if ( page == newpage ) {
+					if ( "init" in piranha.page[page] ) {
+						piranha.page[page].init(subpage);
+					}
+					else {
+						piranha.page[page](subpage);
+					}
 				}
 			}
-			else {
+
+			if ( ! ( newpage in piranha.page ) ) {
 				console.log("function '" + newpage + "' does not exist");
 				piranha.spinner(0);
 			}
@@ -249,11 +254,15 @@ var piranha = {
 				var pdata = { };
 				var total = 0;
 				for(var mask in d.global.ipv4.mask) {
-					data[mask] = Math.floor(d.global.ipv4.mask[mask] / d.global.ipv4.valid * 10000)/100;
-					total += d.global.ipv4.mask[mask] * Math.pow(2,8-mask);
+					var cmask = piranha.helper.cleanvalue.netmask4(mask);
+					if ( ! cmask ) { continue; }
+					data[cmask] = Math.floor(d.global.ipv4.mask[cmask] / d.global.ipv4.valid * 10000)/100;
+					total += d.global.ipv4.mask[cmask] * Math.pow(2,8-cmask);
 				}
 				for(var mask in d.global.ipv4.mask) {
-					pdata[mask] = Math.floor(d.global.ipv4.mask[mask] * Math.pow(2,8-mask) / total * 10000)/100;
+					var cmask = piranha.helper.cleanvalue.netmask4(mask);
+					if ( ! cmask ) { continue; }
+					pdata[cmask] = Math.floor(d.global.ipv4.mask[cmask] * Math.pow(2,8-cmask) / total * 10000)/100;
 				}
 	
 				piranha.morris.mask("piranha_graph_ipv4", 4, data, "%");
@@ -263,11 +272,15 @@ var piranha = {
 				pdata = { };
 				total = 0;
 				for(var mask in d.global.ipv6.mask) {
-					data[mask] = Math.floor(d.global.ipv6.mask[mask] / d.global.ipv6.valid * 10000)/100;
-					total += d.global.ipv6.mask[mask] * Math.pow(2,32-mask);
+					var cmask = piranha.helper.cleanvalue.netmask6(mask);
+					if ( ! cmask ) { continue; }
+					data[cmask] = Math.floor(d.global.ipv6.mask[cmask] / d.global.ipv6.valid * 10000)/100;
+					total += d.global.ipv6.mask[cmask] * Math.pow(2,32-cmask);
 				}
 				for(var mask in d.global.ipv6.mask) {
-					pdata[mask] = Math.floor(d.global.ipv6.mask[mask] * Math.pow(2, 32-mask) / total * 10000)/100;
+					var cmask = piranha.helper.cleanvalue.netmask6(mask);
+					if ( ! cmask ) { continue; }
+					pdata[cmask] = Math.floor(d.global.ipv6.mask[cmask] * Math.pow(2, 32-cmask) / total * 10000)/100;
 				}
 	
 				piranha.morris.mask("piranha_graph_ipv6", 6, data, "%");
@@ -845,6 +858,26 @@ var piranha = {
 	},
 
 	"helper": {
+		"cleanvalue": {
+			"netmask4": function(mask) {
+				if ( typeof mask == 'string' && mask.match(/^\d+$/) )
+					mask=parseInt(mask);
+
+				if ( typeof mask == 'number' && mask >= 0 && mask <= 32 )
+					return mask+0;
+
+				return null;
+			},
+			"netmask6": function(mask) {
+				if ( typeof mask == 'string' && mask.match(/^\d+$/) )
+					mask=parseInt(mask);
+
+				if ( typeof mask == 'number' && mask >= 0 && mask <= 128 )
+					return mask+0;
+
+				return null;
+			},
+		},
 
 		"easynum": function(num) {
 			return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
