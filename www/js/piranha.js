@@ -164,7 +164,7 @@ var piranha = {
 
 			piranha.helper.resize();
 
-			if ( newpage in piranha.conf.pages ) {
+			if ( newpage in piranha.page ) {
 				if ( "init" in piranha.page[newpage] )
 					piranha.page[newpage].init(subpage);
 				else
