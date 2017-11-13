@@ -165,10 +165,10 @@ var piranha = {
 			piranha.helper.resize();
 
 			if ( newpage in piranha.conf.pages ) {
-				if ( "init" in piranha.page[page] )
-					piranha.page[page].init(subpage);
+				if ( "init" in piranha.page[newpage] )
+					piranha.page[newpage].init(subpage);
 				else
-					piranha.page[page](subpage);
+					piranha.page[newpage](subpage);
 			}
 			else {
 				console.log("function '" + newpage + "' does not exist");
@@ -213,7 +213,7 @@ var piranha = {
 			var x = e.newURL.split("#")[1].split("/");
 			if ( x.length > 0 && piranha.conf.pages.indexOf(x[0])>=0 ) {
 				page = x[0];
-				if ( x.length == 2 ) {
+				if ( x.length === 2 ) {
 					subpage = x[1];
 				}
 			}
