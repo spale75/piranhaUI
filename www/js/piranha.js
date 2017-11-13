@@ -164,18 +164,13 @@ var piranha = {
 
 			piranha.helper.resize();
 
-			for(var page in piranha.page) {
-				if ( page == newpage ) {
-					if ( "init" in piranha.page[page] ) {
-						piranha.page[page].init(subpage);
-					}
-					else {
-						piranha.page[page](subpage);
-					}
-				}
+			if ( newpage in piranha.conf.pages ) {
+				if ( "init" in piranha.page[page] )
+					piranha.page[page].init(subpage);
+				else
+					piranha.page[page](subpage);
 			}
-
-			if ( ! ( newpage in piranha.page ) ) {
+			else {
 				console.log("function '" + newpage + "' does not exist");
 				piranha.spinner(0);
 			}
