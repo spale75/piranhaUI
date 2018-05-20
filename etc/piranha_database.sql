@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.7.20, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.7.21, for Linux (x86_64)
 --
 -- Host: localhost    Database: piranha
 -- ------------------------------------------------------
--- Server version	5.7.20-0ubuntu0.16.04.1-log
+-- Server version	5.7.21-0ubuntu0.16.04.1-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -375,8 +375,9 @@ CREATE TABLE `route4` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 /*!50100 PARTITION BY LIST (peerid)
 (PARTITION part0 VALUES IN (0) ENGINE = InnoDB,
- PARTITION part3 VALUES IN (3) ENGINE = InnoDB,
- PARTITION part1 VALUES IN (1) ENGINE = InnoDB) */;
+ PARTITION part5 VALUES IN (5) ENGINE = InnoDB,
+ PARTITION part1 VALUES IN (1) ENGINE = InnoDB,
+ PARTITION part3 VALUES IN (3) ENGINE = InnoDB) */;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -419,6 +420,7 @@ CREATE TABLE `route6` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 /*!50100 PARTITION BY LIST (peerid)
 (PARTITION part0 VALUES IN (0) ENGINE = InnoDB,
+ PARTITION part6 VALUES IN (6) ENGINE = InnoDB,
  PARTITION part4 VALUES IN (4) ENGINE = InnoDB,
  PARTITION part2 VALUES IN (2) ENGINE = InnoDB) */;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -941,7 +943,7 @@ myloop: LOOP
 		FETCH cur_as14 INTO as1,as2;
         IF cur_done THEN LEAVE myloop; END IF;
 
-        -- SELECT 4,as1,as2;
+        
         
         SET n1 = IF(as1 IS NULL, 1, 0);
         SET n2 = IF(as2 IS NULL, 1, 0);
@@ -966,7 +968,7 @@ myloop: LOOP
 		FETCH cur_as16 INTO as1,as2;
         IF cur_done THEN LEAVE myloop; END IF;
 
-        -- SELECT 6,as1,as2;
+        
         
         SET n1 = IF(as1 IS NULL, 1, 0);
         SET n2 = IF(as2 IS NULL, 1, 0);
@@ -1032,22 +1034,7 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `get_aspathid`(IN aspath_hex VARCHAR(2048), OUT aspathid INT UNSIGNED)
 MYPROC:BEGIN
 
-/* Part of Piranha RV v1.0.0
- *
- * Copyright 2017 Pascal Glooor
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 
 
 DECLARE aspath0  VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM ( 0*128)+1 FOR 128));
@@ -1094,7 +1081,7 @@ IF aspathlen = 0 THEN
 END IF;
 
     
--- caculate the aspath hash, used for indexing/uniqueness
+
 SET aspathhash = MD5(CONCAT(
 	IFNULL(aspath0, ''),
     IFNULL(aspath1, ''),
@@ -1113,11 +1100,11 @@ SET aspathhash = MD5(CONCAT(
     IFNULL(aspath14,''),
     IFNULL(aspath15,'') ));
 
--- try to fetch the aspath id if it already exists
+
 SELECT aspath.id INTO aspathid FROM aspath WHERE aspath.hash = aspathhash;
 
 IF aspathid IS NULL THEN
-	-- insert the new aspath in the table
+	
     INSERT INTO aspath SET
 		aspath.hash     = aspathhash,
         aspath.aslen    = aspathlen,
@@ -1138,7 +1125,7 @@ IF aspathid IS NULL THEN
         aspath.aspath14 = aspath14,
         aspath.aspath15 = aspath15;
 	
-    -- fetch the newly created ID
+    
     SELECT aspath.id INTO aspathid FROM aspath WHERE aspath.hash = aspathhash;
 
 END IF;
@@ -1213,7 +1200,7 @@ DECLARE cur_peer	CURSOR FOR SELECT id, IF(ip4 IS NOT NULL,4,6), asn FROM peer;
 DECLARE CONTINUE	HANDLER FOR NOT FOUND SET cur_done = TRUE;
 
 
-# result temporary table
+
 DROP TEMPORARY TABLE IF EXISTS subtree_temp;
 CREATE TEMPORARY TABLE subtree_temp (
 	aspath VARCHAR(1024),
@@ -1223,7 +1210,7 @@ CREATE TEMPORARY TABLE subtree_temp (
     PRIMARY KEY (aspath)
 );
 
-# optimisation for aspath up to 3 ASNs
+
 
 IF in_aspath IS NULL THEN
 
@@ -1504,7 +1491,7 @@ DECLARE cur_peer	CURSOR FOR SELECT id, IF(ip4 IS NOT NULL,4,6), asn FROM peer;
 DECLARE CONTINUE	HANDLER FOR NOT FOUND SET cur_done = TRUE;
 
 
-# result temporary table
+
 DROP TEMPORARY TABLE IF EXISTS subtree_temp;
 CREATE TEMPORARY TABLE subtree_temp (
 	aspath VARCHAR(1024),
@@ -1514,7 +1501,7 @@ CREATE TEMPORARY TABLE subtree_temp (
     PRIMARY KEY (aspath)
 );
 
-# optimisation for aspath up to 3 ASNs
+
 
 IF in_aspath IS NULL THEN
     INSERT INTO subtree_temp (aspath,cnt4) (SELECT peer.asn,1 FROM peer WHERE ip4 IS NOT NULL)
@@ -1762,25 +1749,10 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `get_communityid`(IN community_hex VARCHAR(2048), OUT communityid INT UNSIGNED)
 MYPROC:BEGIN
 
-/* Part of Piranha RV v1.0.0
- *
- * Copyright 2017 Pascal Glooor
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 
--- community 8 parts split in hex representation.
+
+
 DECLARE community1 VARBINARY(256);
 DECLARE community2 VARBINARY(256);
 DECLARE community3 VARBINARY(256);
@@ -1790,23 +1762,19 @@ DECLARE community6 VARBINARY(256);
 DECLARE community7 VARBINARY(256);
 DECLARE community8 VARBINARY(256);
 
--- community length
+
 DECLARE community_len INT UNSIGNED DEFAULT 0;
 
--- community MD5 hash used for indexing in the community table
+
 DECLARE community_hash CHAR(32) DEFAULT NULL;
 
--- cursor and other variables used for the cursor
+
 DECLARE com CHAR(8);
 DECLARE done INT DEFAULT FALSE;
 DECLARE cur CURSOR FOR SELECT comsort.com FROM comsort ORDER BY com;
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
-/*
--- to optimise the storage of communities, we want to sort them
-CREATE TEMPORARY TABLE IF NOT EXISTS comsort ( com CHAR(8), PRIMARY KEY (com) );
-TRUNCATE TABLE comsort;
-*/
+
 
 IF community_hex IS NULL THEN
 	SET community_len = 0;
@@ -1819,25 +1787,9 @@ IF community_len = 0 THEN
     LEAVE MYPROC;
 END IF;
 
-/*
-WHILE community_len>0 DO
-	INSERT INTO comsort SET com = SUBSTRING(community_hex FROM ((community_len-1)*8)+1 FOR 8);
 
-	SET community_len = community_len - 1;
-END WHILE;
 
--- rebuild the community_hex string
-SET community_hex = '';
 
-OPEN cur;
-COMREAD: LOOP
-	FETCH cur INTO com;
-    IF done THEN LEAVE COMREAD; END IF;
-    SET community_hex = CONCAT(community_hex,com);
-END LOOP;
-*/
-
--- split the whole hex string into 8 parts
 SET community1 = SUBSTRING(community_hex FROM    1 FOR 256);
 SET community2 = SUBSTRING(community_hex FROM  257 FOR 256);
 SET community3 = SUBSTRING(community_hex FROM  513 FOR 256);
@@ -1848,7 +1800,7 @@ SET community7 = SUBSTRING(community_hex FROM 1537 FOR 256);
 SET community8 = SUBSTRING(community_hex FROM 1793 FOR 256);
 
 
--- recalculate the length of the community
+
 SET community_len = (
 	LENGTH(IFNULL(community1,'')) +
     LENGTH(IFNULL(community2,'')) +
@@ -1859,7 +1811,7 @@ SET community_len = (
     LENGTH(IFNULL(community7,'')) +
     LENGTH(IFNULL(community8,'')) ) / 8;
     
--- caculate the community hash, used for indexing/uniqueness
+
 SET community_hash = MD5(CONCAT(
 	UNHEX(IFNULL(community1,'')),
     UNHEX(IFNULL(community2,'')),
@@ -1870,11 +1822,11 @@ SET community_hash = MD5(CONCAT(
     UNHEX(IFNULL(community7,'')),
     UNHEX(IFNULL(community8,'')) ));
 
--- try to fetch the community id if it already exists
+
 SELECT community.id INTO communityid FROM community WHERE community.hash = community_hash;
 
 IF communityid IS NULL THEN
-	-- insert the new community in the table
+	
     INSERT INTO community SET
 		community.hash       = community_hash,
         community.comlen     = community_len,
@@ -1887,7 +1839,7 @@ IF communityid IS NULL THEN
         community.community7 = UNHEX(community7),
         community.community8 = UNHEX(community8);
 	
-    -- fetch the newly created ID
+    
     SELECT community.id INTO communityid FROM community WHERE community.hash = community_hash;
 
 END IF;
@@ -1912,22 +1864,7 @@ DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `get_nexthopid`(IN nexthop VARCHAR(50), OUT nexthopid INT UNSIGNED)
 MYPROC:BEGIN
 
-/* Part of Piranha RV v1.0.0
- *
- * Copyright 2017 Pascal Glooor
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 
 
 IF nexthop IS NULL THEN
@@ -1936,14 +1873,14 @@ IF nexthop IS NULL THEN
 END IF;
 
    
--- try to fetch the nexthop id if it already exists
+
 SELECT nexthop.id INTO nexthopid FROM nexthop WHERE nexthop.nexthop = nexthop;
 
 IF nexthopid IS NULL THEN
-	-- insert the new nexthop in the table
+	
     INSERT INTO nexthop SET	nexthop.nexthop = nexthop;
 
-    -- fetch the newly created ID
+    
     SELECT nexthop.id INTO nexthopid FROM nexthop WHERE nexthop.nexthop = nexthop;
 
 END IF;
@@ -1982,8 +1919,8 @@ DECLARE network		INT UNSIGNED		DEFAULT NULL;
 DECLARE network1	BIGINT UNSIGNED		DEFAULT NULL;
 DECLARE network2	BIGINT UNSIGNED		DEFAULT NULL;
 
--- Copy inputs to local variables. stmt do not work with
--- declared variables
+
+
 SET @peerid		= IFNULL(peerid,0);
 SET network	    = IF(proto=4, INET_ATON(prefix), NULL);
 SET network1	= IF(proto=6, CONV(SUBSTRING(HEX(INET6_ATON(prefix)),  1, 16), 16, 10), NULL);
@@ -2019,9 +1956,9 @@ SET @network  = network;
 SET @network1 = network1;
 SET @network2 = network2;
 
-# SELECT @network, @network1, @network2, @netmask1, @netmask2;
 
--- match any network that @network belongs to
+
+
 IF @netmask1 IS NULL THEN
 	SET @cond = '( (1=0) ';
     SET @mask = IF(proto=4,32,128);
@@ -2055,7 +1992,7 @@ IF @netmask1 IS NULL THEN
     PREPARE stmt FROM @query;
     EXECUTE stmt USING @peerid, @peerid, @valid, @validall;
 
--- match only exact match
+
 ELSEIF @netmask2 IS NULL OR @netmask2 = @netmask1 THEN
 	SET @cond = '( (1=0) ';
     SET @mask = @netmask1;
@@ -2086,7 +2023,7 @@ ELSEIF @netmask2 IS NULL OR @netmask2 = @netmask1 THEN
     PREPARE stmt FROM @query;
     EXECUTE stmt USING @peerid, @peerid, @valid, @validall;
 
--- match exact and more specific
+
 ELSEIF @netmask1 < @netmask2 THEN
 
 	SET @cond = '( (1=0) ';
@@ -2122,7 +2059,7 @@ ELSEIF @netmask1 < @netmask2 THEN
     EXECUTE stmt USING @peerid, @peerid, @valid, @validall;
 
 
--- match exact and less specific
+
 ELSEIF @netmask2 > @netmask1 THEN
 	SET @query = "nope";
 END IF;
@@ -2286,7 +2223,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `route_announce`(
     )
 MYPROC:BEGIN
 
--- we need BIGINTs for v6 conversions
+
 DECLARE network4	INT UNSIGNED DEFAULT NULL;
 DECLARE network4e	INT UNSIGNED DEFAULT NULL;
 DECLARE network61	BIGINT UNSIGNED DEFAULT NULL;
@@ -2295,13 +2232,13 @@ DECLARE network61e	BIGINT UNSIGNED DEFAULT NULL;
 DECLARE network62e	BIGINT UNSIGNED DEFAULT NULL;
 DECLARE netmask		TINYINT UNSIGNED DEFAULT NULL;
 DECLARE aspathlen   INT UNSIGNED DEFAULT LENGTH(aspath_hex)/8;
--- extract netmask
+
 SET netmask = SUBSTRING_INDEX(prefix, '/', -1) + 0;
 
--- remove netmask from prefix
+
 SET prefix = REPLACE(prefix, CONCAT('/',netmask), '');
 
--- decode IP address
+
 IF IS_IPV6(prefix) THEN
 
 
@@ -2337,7 +2274,7 @@ ELSE
 	SET error = "prefix does not contain an IPv4/IPv6 address";
 END IF;
 
--- handle errors
+
 IF error IS NOT NULL THEN LEAVE MYPROC; END IF;
 
 CALL get_communityid(community_hex, @communityid);
@@ -2355,7 +2292,7 @@ SET @n3        = IF(aspathlen>3, CONV(SUBSTRING(aspath_hex FROM 25 FOR 8),16,10)
 SET @n4        = IF(aspathlen>4, CONV(SUBSTRING(aspath_hex FROM 33 FOR 8),16,10), NULL);
 
 
--- handle rolling buffer
+
 IF @piranha_rbuf_pos IS NULL THEN
 	SET @piranha_rbuf_pos = 0;
     SELECT value INTO @piranha_rbuf_max FROM config WHERE name = 'rbuf_max';
@@ -2363,8 +2300,8 @@ IF @piranha_rbuf_pos IS NULL THEN
     IF @piranha_rbuf_max IS NULL THEN SET @piranha_rbuf_cur = NULL; END IF;
 END IF;
 
--- insert data into the corresponding peer table
--- peer table MUST exist
+
+
 IF network4 IS NOT NULL THEN
     
 	SET @query = CONCAT(
@@ -2509,13 +2446,13 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `route_withdrawn`(
     )
 MYPROC:BEGIN
 
--- extract netmask
+
 SET @netmask = SUBSTRING_INDEX(prefix, '/', -1) + 0;
 
--- remove netmask from prefix
+
 SET prefix = REPLACE(prefix, CONCAT('/',@netmask), '');
 
--- decode IP address
+
 IF IS_IPV6(prefix) THEN
 	SET @network61 = CONV(SUBSTRING(HEX(inet6_aton(prefix)), 1, 16), 16, 10);
     SET @network62 = CONV(SUBSTRING(HEX(inet6_aton(prefix)),17, 16), 16, 10);
@@ -2527,13 +2464,13 @@ ELSE
 	SET error = "prefix does not contain an IPv4/IPv6 address";
 END IF;
 
--- handle errors
+
 IF error IS NOT NULL THEN LEAVE MYPROC; END IF;
 
 SET @peerid    = peerid;
 SET @timestamp = timestamp;
 
--- handle rolling buffer
+
 IF @piranha_rbuf_pos IS NULL THEN
 	SET @piranha_rbuf_pos = 0;
     SELECT value INTO @piranha_rbuf_max FROM config WHERE name = 'rbuf_max';
@@ -2541,8 +2478,8 @@ IF @piranha_rbuf_pos IS NULL THEN
     IF @piranha_rbuf_max IS NULL THEN SET @piranha_rbuf_cur = NULL; END IF;
 END IF;
 
--- update data in the corresponding peer table
--- peer table MUST exist
+
+
 IF @network4 IS NOT NULL THEN
     
 	SET @query = CONCAT("UPDATE route4 SET valid = 0, flap_w = flap_w+1, lastupdate = FROM_UNIXTIME(?) WHERE networkb = ? AND netmask = ?");
@@ -2639,4 +2576,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-11-07  1:38:48
+-- Dump completed on 2018-05-20 17:50:26
