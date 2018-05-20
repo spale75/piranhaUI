@@ -10,12 +10,15 @@ use POSIX ':sys_wait_h';
 use Time::HiRes qw(gettimeofday tv_interval);
 use File::Temp qw(tempfile);
 use Fcntl qw(:flock SEEK_END);
+use File::Basename;
 
 $|=1;
 
 my($file) = @ARGV;
 
-if ( !defined $file ) {
+$file = dirname($0) . '/../etc/config.json' if !defined $file;
+
+if ( ! -r $file ) {
 	print STDERR "Usage: $0 <config file>\n";
 	exit 1;
 }

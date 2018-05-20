@@ -4,12 +4,15 @@ use strict;
 use DBI;
 use JSON;
 use Data::Dumper;
+use File::Basename;
 
 $|=1;
 
 my($file) = @ARGV;
 
-if ( !defined $file ) {
+$file = dirname($0) . '/../etc/config.json' if !defined $file;
+
+if ( ! -r $file ) {
 	print STDERR "Usage: $0 <config file>\n";
 	exit 1;
 }
@@ -32,18 +35,28 @@ EOF
 
 while(<STDIN>) { last; }
 
-# delete tables
-foreach my $wild (qw(peer_rbuf_% route4 route6)) {
-	my $q = sqlquery($dbh,"SHOW TABLES LIKE '$wild'");
-	while(my @x = $q->fetchrow_array()) {
-		print "DROP		$x[0]\n";
-		sqlquery($dbh,"DROP TABLE $x[0]");
+# clear peer state
+my $q = sqlquery($dbh, "SELECT id,ip4,ip6 FROM peer");
+while(my($id,$ip4,$ip6) = $q->fetchrow_array()) {
+	my $tbl;
+
+	if ( defined $ip4 ) {
+		$tbl = 'route4';
 	}
+	elsif ( defined $ip6 ) {
+		$tbl = 'route6';
+	}
+
+	if ( defined $tbl ) {
+		print "CALL manage_peer($id,'delete');\n";
+		sqlquery($dbh,"CALL manage_peer(?,'delete')",$id);
+	}
+
 }
 
 # truncate tables
-foreach my $tbl (qw(community nexthop)) {
-	print "TRUNCATE	$tbl\n";
+foreach my $tbl (qw(community nexthop aspath stats stats_aspath)) {
+	print "TRUNCATE	TABLE $tbl\n";
 	sqlquery($dbh,"TRUNCATE TABLE $tbl");
 }
 
