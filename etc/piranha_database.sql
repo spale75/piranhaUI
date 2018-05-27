@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.7.21, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.7.22, for Linux (x86_64)
 --
 -- Host: localhost    Database: piranha
 -- ------------------------------------------------------
--- Server version	5.7.21-0ubuntu0.16.04.1-log
+-- Server version	5.7.22-0ubuntu18.04.1-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -375,8 +375,8 @@ CREATE TABLE `route4` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 /*!50100 PARTITION BY LIST (peerid)
 (PARTITION part0 VALUES IN (0) ENGINE = InnoDB,
- PARTITION part5 VALUES IN (5) ENGINE = InnoDB,
  PARTITION part1 VALUES IN (1) ENGINE = InnoDB,
+ PARTITION part5 VALUES IN (5) ENGINE = InnoDB,
  PARTITION part3 VALUES IN (3) ENGINE = InnoDB) */;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -421,8 +421,8 @@ CREATE TABLE `route6` (
 /*!50100 PARTITION BY LIST (peerid)
 (PARTITION part0 VALUES IN (0) ENGINE = InnoDB,
  PARTITION part6 VALUES IN (6) ENGINE = InnoDB,
- PARTITION part4 VALUES IN (4) ENGINE = InnoDB,
- PARTITION part2 VALUES IN (2) ENGINE = InnoDB) */;
+ PARTITION part2 VALUES IN (2) ENGINE = InnoDB,
+ PARTITION part4 VALUES IN (4) ENGINE = InnoDB) */;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -508,6 +508,104 @@ CREATE TABLE `template_rbuf6` (
   KEY `index2` (`peerid`,`timestamp`,`msg`)
 ) ENGINE=BLACKHOLE DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Temporary table structure for view `view_route4`
+--
+
+DROP TABLE IF EXISTS `view_route4`;
+/*!50001 DROP VIEW IF EXISTS `view_route4`*/;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+/*!50001 CREATE VIEW `view_route4` AS SELECT 
+ 1 AS `peer_id`,
+ 1 AS `prefix`,
+ 1 AS `origin_as`,
+ 1 AS `as1`,
+ 1 AS `as2`,
+ 1 AS `as3`,
+ 1 AS `as4`,
+ 1 AS `valid`,
+ 1 AS `flap_a`,
+ 1 AS `flap_w`,
+ 1 AS `updated`,
+ 1 AS `aspath`,
+ 1 AS `community`,
+ 1 AS `nexthop`,
+ 1 AS `peer_ip`,
+ 1 AS `peer_asn`,
+ 1 AS `route_networkb`,
+ 1 AS `route_networke`,
+ 1 AS `route_netmask`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary table structure for view `view_route6`
+--
+
+DROP TABLE IF EXISTS `view_route6`;
+/*!50001 DROP VIEW IF EXISTS `view_route6`*/;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+/*!50001 CREATE VIEW `view_route6` AS SELECT 
+ 1 AS `peer_id`,
+ 1 AS `prefix`,
+ 1 AS `origin_as`,
+ 1 AS `as1`,
+ 1 AS `as2`,
+ 1 AS `as3`,
+ 1 AS `as4`,
+ 1 AS `valid`,
+ 1 AS `flap_a`,
+ 1 AS `flap_w`,
+ 1 AS `updated`,
+ 1 AS `aspath`,
+ 1 AS `community`,
+ 1 AS `nexthop`,
+ 1 AS `peer_ip`,
+ 1 AS `peer_asn`,
+ 1 AS `route_networkb1`,
+ 1 AS `route_networkb2`,
+ 1 AS `route_networke1`,
+ 1 AS `route_networke2`,
+ 1 AS `route_netmask`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Final view structure for view `view_route4`
+--
+
+/*!50001 DROP VIEW IF EXISTS `view_route4`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8 */;
+/*!50001 SET character_set_results     = utf8 */;
+/*!50001 SET collation_connection      = utf8_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`debian-sys-maint`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `view_route4` AS select `r`.`peerid` AS `peer_id`,concat(inet_ntoa(`r`.`networkb`),'/',`r`.`netmask`) AS `prefix`,`r`.`origin_as` AS `origin_as`,`r`.`as1` AS `as1`,`r`.`as2` AS `as2`,`r`.`as3` AS `as3`,`r`.`as4` AS `as4`,`r`.`valid` AS `valid`,`r`.`flap_a` AS `flap_a`,`r`.`flap_w` AS `flap_w`,`r`.`lastupdate` AS `updated`,`SHOW_ASPATH`(`a`.`aslen`,`a`.`aspath0`,`a`.`aspath1`,`a`.`aspath2`,`a`.`aspath3`,`a`.`aspath4`,`a`.`aspath5`,`a`.`aspath6`,`a`.`aspath7`,`a`.`aspath8`,`a`.`aspath9`,`a`.`aspath10`,`a`.`aspath11`,`a`.`aspath12`,`a`.`aspath13`,`a`.`aspath14`,`a`.`aspath15`) AS `aspath`,`SHOW_COMMUNITY`(`c`.`comlen`,`c`.`community1`,`c`.`community2`,`c`.`community3`,`c`.`community4`,`c`.`community5`,`c`.`community6`,`c`.`community7`,`c`.`community8`) AS `community`,inet_ntoa(`n`.`nexthop`) AS `nexthop`,inet_ntoa(`p`.`ip4`) AS `peer_ip`,`p`.`asn` AS `peer_asn`,`r`.`networkb` AS `route_networkb`,`r`.`networke` AS `route_networke`,`r`.`netmask` AS `route_netmask` from ((((`route4` `r` left join `aspath` `a` on((`r`.`aspathid` = `a`.`id`))) left join `community` `c` on((`r`.`communityid` = `c`.`id`))) left join `nexthop` `n` on((`r`.`nexthopid` = `c`.`id`))) left join `peer` `p` on((`r`.`peerid` = `p`.`id`))) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `view_route6`
+--
+
+/*!50001 DROP VIEW IF EXISTS `view_route6`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8 */;
+/*!50001 SET character_set_results     = utf8 */;
+/*!50001 SET collation_connection      = utf8_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`debian-sys-maint`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `view_route6` AS select `r`.`peerid` AS `peer_id`,concat(`INET6_FROM2INT`(`r`.`networkb1`,`r`.`networkb2`),'/',`r`.`netmask`) AS `prefix`,`r`.`origin_as` AS `origin_as`,`r`.`as1` AS `as1`,`r`.`as2` AS `as2`,`r`.`as3` AS `as3`,`r`.`as4` AS `as4`,`r`.`valid` AS `valid`,`r`.`flap_a` AS `flap_a`,`r`.`flap_w` AS `flap_w`,`r`.`lastupdate` AS `updated`,`SHOW_ASPATH`(`a`.`aslen`,`a`.`aspath0`,`a`.`aspath1`,`a`.`aspath2`,`a`.`aspath3`,`a`.`aspath4`,`a`.`aspath5`,`a`.`aspath6`,`a`.`aspath7`,`a`.`aspath8`,`a`.`aspath9`,`a`.`aspath10`,`a`.`aspath11`,`a`.`aspath12`,`a`.`aspath13`,`a`.`aspath14`,`a`.`aspath15`) AS `aspath`,`SHOW_COMMUNITY`(`c`.`comlen`,`c`.`community1`,`c`.`community2`,`c`.`community3`,`c`.`community4`,`c`.`community5`,`c`.`community6`,`c`.`community7`,`c`.`community8`) AS `community`,inet_ntoa(`n`.`nexthop`) AS `nexthop`,inet_ntoa(`p`.`ip4`) AS `peer_ip`,`p`.`asn` AS `peer_asn`,`r`.`networkb1` AS `route_networkb1`,`r`.`networkb2` AS `route_networkb2`,`r`.`networke1` AS `route_networke1`,`r`.`networke2` AS `route_networke2`,`r`.`netmask` AS `route_netmask` from ((((`route6` `r` left join `aspath` `a` on((`r`.`aspathid` = `a`.`id`))) left join `community` `c` on((`r`.`communityid` = `c`.`id`))) left join `nexthop` `n` on((`r`.`nexthopid` = `c`.`id`))) left join `peer` `p` on((`r`.`peerid` = `p`.`id`))) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
 
 --
 -- Dumping events for database 'piranha'
@@ -643,7 +741,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `inet6_from2int`(prefix1 BIGINT UNSIGNED, prefix2 BIGINT UNSIGNED) RETURNS varchar(50) CHARSET latin1
+CREATE DEFINER=`root`@`localhost` FUNCTION `INET6_FROM2INT`(prefix1 BIGINT UNSIGNED, prefix2 BIGINT UNSIGNED) RETURNS varchar(50) CHARSET latin1
 BEGIN
 
 RETURN INET6_NTOA(
@@ -746,7 +844,7 @@ ALTER DATABASE `piranha` CHARACTER SET utf8 COLLATE utf8_general_ci ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `show_aspath`(
+CREATE DEFINER=`root`@`localhost` FUNCTION `SHOW_ASPATH`(
 	len INTEGER UNSIGNED,
 	p0 VARBINARY(128),
     p1 VARBINARY(128),
@@ -857,7 +955,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `show_community`(
+CREATE DEFINER=`root`@`localhost` FUNCTION `SHOW_COMMUNITY`(
 	len INTEGER UNSIGNED,
 	p1 VARBINARY(128),
     p2 VARBINARY(128),
@@ -2133,8 +2231,11 @@ IF action = "create" THEN
     IF peerproto > 0 THEN
     
 		SET @q = CONCAT("ALTER TABLE route", peerproto, " ADD PARTITION ( PARTITION part", peerid, " VALUES IN (",peerid,") )");
+		#SET @q = CONCAT("DELETE FROM route", peerproto, " WHERE peerid = ", peerid);
 		PREPARE stmt FROM @q; BEGIN EXECUTE stmt; END; DEALLOCATE PREPARE stmt;
-		       
+
+
+
         
         SET @q = CONCAT("CREATE TABLE IF NOT EXISTS peer_rbuf_", peerid, " LIKE template_rbuf", peerproto);
 		PREPARE stmt FROM @q; EXECUTE stmt;
@@ -2157,6 +2258,7 @@ ELSEIF action = "delete" THEN
     IF peerproto = 0 THEN
     
         SET @q = CONCAT("ALTER TABLE route", peerproto, " DROP PARTITION part", peerid);
+        #SET @q = CONCAT("DELETE FROM route", peerproto, " WHERE peerid = ", peerid);
         PREPARE stmt FROM @q; BEGIN EXECUTE stmt; END; DEALLOCATE PREPARE stmt;
         
 		SET @q = CONCAT("DROP TABLE IF EXISTS peer_rbuf_", peerid);
@@ -2173,6 +2275,7 @@ ELSEIF action = "reset" THEN
     IF peerproto > 0 THEN
     	
         SET @q = CONCAT("ALTER TABLE route", peerproto, " DROP PARTITION part", peerid);
+        #SET @q = CONCAT("DELETE FROM route", peerproto, " WHERE peerid = ", peerid);
         PREPARE stmt FROM @q; BEGIN EXECUTE stmt; END; DEALLOCATE PREPARE stmt;
         
         SET @q = CONCAT("ALTER TABLE route", peerproto, " ADD PARTITION ( PARTITION part", peerid, " VALUES IN (",peerid,") )");
@@ -2292,7 +2395,6 @@ SET @n3        = IF(aspathlen>3, CONV(SUBSTRING(aspath_hex FROM 25 FOR 8),16,10)
 SET @n4        = IF(aspathlen>4, CONV(SUBSTRING(aspath_hex FROM 33 FOR 8),16,10), NULL);
 
 
-
 IF @piranha_rbuf_pos IS NULL THEN
 	SET @piranha_rbuf_pos = 0;
     SELECT value INTO @piranha_rbuf_max FROM config WHERE name = 'rbuf_max';
@@ -2301,38 +2403,63 @@ IF @piranha_rbuf_pos IS NULL THEN
 END IF;
 
 
-
 IF network4 IS NOT NULL THEN
     
-	SET @query = CONCAT(
-		"INSERT INTO route4 SET ",
-		"peerid=?, networkb=?, networke=?, netmask=?, ",
-        "nexthopid=?, origin_as=?, communityid=?, ",
-        "lastupdate=FROM_UNIXTIME(?), flap_a=1, ",
-		"aspathid=?, as1=?, as2=?, as3=?, as4=? ",
-		"ON DUPLICATE KEY UPDATE ",
-        "nexthopid=?, origin_as=?, communityid=?, ",
-        "lastupdate=FROM_UNIXTIME(?), flap_a=flap_a+1, ",
-        "aspathid=?, as1=?, as2=?, as3=?, as4=? "
-	);
+#	SET @query = CONCAT(
+#		"INSERT INTO route4 SET ",
+#		"peerid=?, networkb=?, networke=?, netmask=?, ",
+#        "nexthopid=?, origin_as=?, communityid=?, ",
+#        "lastupdate=FROM_UNIXTIME(?), flap_a=1, ",
+#		"aspathid=?, as1=?, as2=?, as3=?, as4=? ",
+#		"ON DUPLICATE KEY UPDATE ",
+#        "nexthopid=?, origin_as=?, communityid=?, ",
+#        "lastupdate=FROM_UNIXTIME(?), flap_a=flap_a+1, ",
+#        "aspathid=?, as1=?, as2=?, as3=?, as4=? "
+#	);
 
 	SET @network4  = network4;
     SET @network4e = network4e;
     SET @netmask   = netmask;
 
+	INSERT INTO route4 SET
+		route4.peerid      = peerid,
+        route4.networkb    = network4,
+        route4.networke    = network4e,
+        route4.netmask     = netmask,
+        route4.nexthopid   = @nexthopid,
+        route4.origin_as   = @origin_as,
+        route4.communityid = @communityid,
+        route4.lastupdate  = FROM_UNIXTIME(@timestamp),
+        route4.flap_a      = 1,
+        route4.aspathid    = @aspathid,
+        route4.as1         = @n1,
+        route4.as2         = @n2,
+        route4.as3         = @n3,
+        route4.as4         = @n4
+        ON DUPLICATE KEY UPDATE
+        route4.nexthopid   = @nexthopid,
+        route4.origin_as   = @origin_as,
+        route4.communityid = @communityid,
+        route4.lastupdate  = FROM_UNIXTIME(@timestamp),
+        route4.flap_a      = route4.flap_a + 1,
+        route4.aspathid    = @aspathid,
+        route4.as1         = @n1,
+        route4.as2         = @n2,
+        route4.as3         = @n3,
+        route4.as4         = @n4;        
 
-	PREPARE stmt FROM @query;
-	EXECUTE stmt USING
-		@peerid, @network4, @network4e, @netmask,
-        @nexthopid, @origin_as, @communityid,
-        @timestamp,
-        @aspathid, @n1, @n2, @n3, @n4,
+#	PREPARE stmt FROM @query;
+#	EXECUTE stmt USING
+#		@peerid, @network4, @network4e, @netmask,
+ #       @nexthopid, @origin_as, @communityid,
+  #      @timestamp,
+#        @aspathid, @n1, @n2, @n3, @n4,
                 
-		@nexthopid, @origin_as, @communityid,
-        @timestamp,
-        @aspathid, @n1, @n2, @n3, @n4;
+#		@nexthopid, @origin_as, @communityid,
+#        @timestamp,
+#        @aspathid, @n1, @n2, @n3, @n4;
 
-    DEALLOCATE PREPARE stmt;
+ #   DEALLOCATE PREPARE stmt;
 
     IF @piranha_rbuf_pos IS NOT NULL THEN
 		
@@ -2360,17 +2487,17 @@ IF network4 IS NOT NULL THEN
 
 ELSEIF network61 IS NOT NULL AND network62 IS NOT NULL THEN
 
-	SET @query = CONCAT(
-		"INSERT INTO route6 SET ",
-		"peerid=?, networkb1=?, networkb2=?, networke1=?, networke2=?, netmask=?, ",
-        "nexthopid=?, origin_as=?, communityid=?, ",
-        "lastupdate=FROM_UNIXTIME(?), flap_a=1, ",
-        "aspathid=?, as1=?, as2=?, as3=?, as4=? ",
-		"ON DUPLICATE KEY UPDATE ",
-        "nexthopid=?, origin_as=?, communityid=?, ",
-        "lastupdate=FROM_UNIXTIME(?), flap_a=flap_a+1, ",
-        "aspathid=?, as1=?, as2=?, as3=?, as4=? "
-	);
+#	SET @query = CONCAT(
+#		"INSERT INTO route6 SET ",
+#		"peerid=?, networkb1=?, networkb2=?, networke1=?, networke2=?, netmask=?, ",
+#        "nexthopid=?, origin_as=?, communityid=?, ",
+#        "lastupdate=FROM_UNIXTIME(?), flap_a=1, ",
+#        "aspathid=?, as1=?, as2=?, as3=?, as4=? ",
+#		"ON DUPLICATE KEY UPDATE ",
+#        "nexthopid=?, origin_as=?, communityid=?, ",
+#        "lastupdate=FROM_UNIXTIME(?), flap_a=flap_a+1, ",
+#        "aspathid=?, as1=?, as2=?, as3=?, as4=? "
+#	);
 
 
 	SET @network61  = network61;
@@ -2379,18 +2506,49 @@ ELSEIF network61 IS NOT NULL AND network62 IS NOT NULL THEN
     SET @network62e = network62e;
     SET @netmask    = netmask;
     
-	PREPARE stmt FROM @query;
-	EXECUTE stmt USING
-		@peerid, @network61, @network62, @network61e, @network62e, @netmask,
-        @nexthopid, @origin_as, @communityid,
-        @timestamp, 
-        @aspathid, @n1, @n2, @n3, @n4,
-        
-		@nexthopid, @origin_as, @communityid,
-        @timestamp,
-        @aspathid, @n1, @n2, @n3, @n4;
-        
-    DEALLOCATE PREPARE stmt;
+#	PREPARE stmt FROM @query;
+#	EXECUTE stmt USING
+#		@peerid, @network61, @network62, @network61e, @network62e, @netmask,
+#        @nexthopid, @origin_as, @communityid,
+#        @timestamp, 
+#        @aspathid, @n1, @n2, @n3, @n4,
+#        
+#		@nexthopid, @origin_as, @communityid,
+#        @timestamp,
+#        @aspathid, @n1, @n2, @n3, @n4;
+#	
+#    DEALLOCATE PREPARE stmt;
+
+	INSERT INTO route6 SET
+		route6.peerid      = peerid,
+        route6.networkb1   = network61,
+        route6.networkb2   = network62,
+        route6.networke1   = network61e,
+        route6.networke2   = network62e,
+        route6.netmask     = netmask,
+        route6.nexthopid   = @nexthopid,
+        route6.origin_as   = @origin_as,
+        route6.communityid = @communityid,
+        route6.lastupdate  = FROM_UNIXTIME(@timestamp),
+        route6.flap_a      = 1,
+        route6.aspathid    = @aspathid,
+        route6.as1         = @n1,
+        route6.as2         = @n2,
+        route6.as3         = @n3,
+        route6.as4         = @n4
+	ON DUPLICATE KEY UPDATE
+        route6.nexthopid   = @nexthopid,
+        route6.origin_as   = @origin_as,
+        route6.communityid = @communityid,
+        route6.lastupdate  = FROM_UNIXTIME(@timestamp),
+        route6.flap_a      = route6.flap_a + 1,
+        route6.aspathid    = @aspathid,
+        route6.as1         = @n1,
+        route6.as2         = @n2,
+        route6.as3         = @n3,
+        route6.as4         = @n4;
+    
+    
     
     IF @piranha_rbuf_pos IS NOT NULL THEN
 
@@ -2576,4 +2734,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-05-20 17:50:26
+-- Dump completed on 2018-05-27 21:27:33

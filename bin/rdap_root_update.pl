@@ -5,10 +5,14 @@ use DBI;
 use Socket6;
 use Data::Dumper;
 use JSON;
+use File::Basename;
+
 
 $|=1;
 
 my ($file) = @ARGV;
+
+$file = dirname($0) . '/../etc/config.json' if !defined $file;
 
 if ( !defined $file ) {
 	print STDERR "Usage: $0 <config file>\n";
