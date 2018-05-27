@@ -705,7 +705,7 @@ sub sqlquery {
 	foreach (@args) {
 		print F "ARG: '$_'\n";
 	}
-	print F sprintf("DURATION: %s\n", tv_interval($t, [gettimeofday]));
+	print F sprintf("DURATION: %sms\n", tv_interval($t, [gettimeofday]) * 1000);
 	close(F);
 
 	return $sth;

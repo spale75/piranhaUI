@@ -9,3 +9,4 @@ myisam_use_mmap=ON
 key_buffer_size=134217728
 event_scheduler=ON
 #innodb_force_recovery=1
+innodb_flush_log_at_trx_commit=0
