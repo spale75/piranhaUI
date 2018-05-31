@@ -1,0 +1,7 @@
+CREATE TABLE `rdap_cache` (
+  `name` varchar(50) NOT NULL,
+  `value` text NOT NULL,
+  `valid` datetime NOT NULL,
+  PRIMARY KEY (`name`),
+  KEY `index1` (`name`,`valid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

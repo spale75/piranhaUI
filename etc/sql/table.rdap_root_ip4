@@ -1,0 +1,13 @@
+CREATE TABLE `rdap_root_ip4` (
+  `networkb` int(10) unsigned NOT NULL,
+  `networke` int(10) unsigned NOT NULL DEFAULT '0',
+  `netmask` int(10) unsigned NOT NULL,
+  `rir` varchar(50) NOT NULL,
+  `rdap` varchar(50) DEFAULT NULL,
+  `rdaps` varchar(50) DEFAULT NULL,
+  `descr` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`networkb`,`netmask`) USING BTREE,
+  KEY `index2` (`rir`),
+  KEY `index3` (`networkb`,`networke`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+

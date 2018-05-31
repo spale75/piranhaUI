@@ -1,0 +1,279 @@
+DELIMITER ;;
+CREATE PROCEDURE `get_aspath_subtree`( IN in_aspath TEXT, IN psize INTEGER UNSIGNED, IN pnum INTEGER UNSIGNED )
+BEGIN
+
+DECLARE poff INTEGER UNSIGNED DEFAULT psize * pnum;
+
+DECLARE i0  BOOLEAN DEFAULT 1;
+DECLARE i1  BOOLEAN DEFAULT 1;
+DECLARE i2  BOOLEAN DEFAULT 1;
+DECLARE i3  BOOLEAN DEFAULT 1;
+DECLARE i4  BOOLEAN DEFAULT 1;
+DECLARE i5  BOOLEAN DEFAULT 1;
+DECLARE i6  BOOLEAN DEFAULT 1;
+DECLARE i7  BOOLEAN DEFAULT 1;
+DECLARE i8  BOOLEAN DEFAULT 1;
+DECLARE i9  BOOLEAN DEFAULT 1;
+DECLARE i10 BOOLEAN DEFAULT 1;
+DECLARE i11 BOOLEAN DEFAULT 1;
+DECLARE i12 BOOLEAN DEFAULT 1;
+DECLARE i13 BOOLEAN DEFAULT 1;
+DECLARE i14 BOOLEAN DEFAULT 1;
+DECLARE i15 BOOLEAN DEFAULT 1;
+
+DECLARE p0  VARBINARY(128) DEFAULT NULL;
+DECLARE p1  VARBINARY(128) DEFAULT NULL;
+DECLARE p2  VARBINARY(128) DEFAULT NULL;
+DECLARE p3  VARBINARY(128) DEFAULT NULL;
+DECLARE p4  VARBINARY(128) DEFAULT NULL;
+DECLARE p5  VARBINARY(128) DEFAULT NULL;
+DECLARE p6  VARBINARY(128) DEFAULT NULL;
+DECLARE p7  VARBINARY(128) DEFAULT NULL;
+DECLARE p8  VARBINARY(128) DEFAULT NULL;
+DECLARE p9  VARBINARY(128) DEFAULT NULL;
+DECLARE p10 VARBINARY(128) DEFAULT NULL;
+DECLARE p11 VARBINARY(128) DEFAULT NULL;
+DECLARE p12 VARBINARY(128) DEFAULT NULL;
+DECLARE p13 VARBINARY(128) DEFAULT NULL;
+DECLARE p14 VARBINARY(128) DEFAULT NULL;
+DECLARE p15 VARBINARY(128) DEFAULT NULL;
+
+DECLARE len INTEGER UNSIGNED DEFAULT LENGTH(in_aspath) - LENGTH(REPLACE(in_aspath, ' ', '')) + 1;
+DECLARE pos INTEGER UNSIGNED DEFAULT 0;
+
+DECLARE nas  INTEGER UNSIGNED DEFAULT NULL;
+DECLARE nnas INTEGER UNSIGNED DEFAULT NULL;
+
+DECLARE cur_done	INT DEFAULT FALSE;
+DECLARE peerid		INT UNSIGNED DEFAULT 0;
+DECLARE peerproto	TINYINT UNSIGNED DEFAULT 0;
+DECLARE peerasn		INT UNSIGNED DEFAULT 0;
+DECLARE cur_peer	CURSOR FOR SELECT id, IF(ip4 IS NOT NULL,4,6), asn FROM peer;
+DECLARE CONTINUE	HANDLER FOR NOT FOUND SET cur_done = TRUE;
+
+
+
+DROP TEMPORARY TABLE IF EXISTS subtree_temp;
+CREATE TEMPORARY TABLE subtree_temp (
+	aspath VARCHAR(1024),
+    cnt4 INT UNSIGNED DEFAULT 0,
+    cnt6 INT UNSIGNED DEFAULT 0,
+    tot  INT UNSIGNED DEFAULT 0,
+    PRIMARY KEY (aspath)
+);
+
+
+
+IF in_aspath IS NULL THEN
+
+	INSERT INTO subtree_temp (aspath,cnt4,cnt6) (SELECT s.as0,SUM(s.cnt4),SUM(s.cnt6) FROM stats_aspath s GROUP BY s.as0);
+
+ELSEIF len = 1 THEN
+	SET @as0 = IF(len>0,SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', 1), ' ', -1), 0);
+	INSERT INTO subtree_temp (aspath,cnt4,cnt6)
+	(
+		SELECT CONCAT(s.as0, ' ', s.as1), SUM(s.cnt4), SUM(s.cnt6)
+        FROM stats_aspath s
+        WHERE s.as0=@as0 AND s.as1!=0
+        GROUP BY s.as0,s.as1
+	);
+ELSEIF len = 2 THEN
+	SET @as0 = IF(len>0,SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', 1), ' ', -1), 0);
+	SET @as1 = IF(len>1,SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', 2), ' ', -1), 0);
+
+    INSERT INTO subtree_temp (aspath,cnt4,cnt6)
+	(
+		SELECT CONCAT(s.as0, ' ', s.as1, ' ', s.as2), SUM(s.cnt4), SUM(s.cnt6)
+        FROM stats_aspath s
+        WHERE s.as0=@as0 AND s.as1=@as1 AND s.as2!=0
+        GROUP BY s.as0,s.as1,s.as2
+	);
+ELSEIF len = 3 THEN
+	SET @as0 = IF(len>0,SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', 1), ' ', -1), 0);
+	SET @as1 = IF(len>1,SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', 2), ' ', -1), 0);
+	SET @as2 = IF(len>2,SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', 3), ' ', -1), 0);
+
+    INSERT INTO subtree_temp (aspath,cnt4,cnt6)
+	(
+		SELECT CONCAT(s.as0, ' ', s.as1, ' ', s.as2, ' ', s.as3), SUM(s.cnt4), SUM(s.cnt6)
+        FROM stats_aspath s
+        WHERE s.as0=@as0 AND s.as1=@as1 AND s.as2=@as2 AND s.as3 != 0
+        GROUP BY s.as0,s.as1,s.as2,s.as3
+	);
+ELSEIF len = 4 THEN
+	SET @as0 = IF(len>0,SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', 1), ' ', -1), 0);
+	SET @as1 = IF(len>1,SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', 2), ' ', -1), 0);
+	SET @as2 = IF(len>2,SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', 3), ' ', -1), 0);
+    SET @as3 = IF(len>3,SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', 4), ' ', -1), 0);
+
+    INSERT INTO subtree_temp (aspath,cnt4,cnt6)
+	(
+		SELECT CONCAT(s.as0, ' ', s.as1, ' ', s.as2, ' ', s.as3, ' ', s.as4), SUM(s.cnt4), SUM(s.cnt6)
+        FROM stats_aspath s
+        WHERE s.as0=@as0 AND s.as1=@as1 AND s.as2=@as2 AND s.as3=@as3 AND s.as4!=0
+        GROUP BY s.as0,s.as1,s.as2,s.as3,s.as4
+	);
+
+ELSE
+
+	WHILE pos < len DO
+		SET @asn = LPAD(HEX(0+SUBSTRING_INDEX(SUBSTRING_INDEX(in_aspath, ' ', pos+1),' ', -1)),8,'0');
+
+
+		CASE pos
+		WHEN 0 THEN SET @as0 = CONV(@asn,16,10);
+		WHEN 1 THEN SET @as1 = CONV(@asn,16,10);
+		WHEN 2 THEN SET @as2 = CONV(@asn,16,10);
+		WHEN 3 THEN SET @as3 = CONV(@asn,16,10);
+		WHEN 4 THEN SET @as4 = CONV(@asn,16,10);
+        ELSE SET @nothing="todo";
+		END CASE;
+
+
+		IF pos/16 < 1 THEN
+			SET p0 = CONCAT(IFNULL(p0,''), @asn);
+		ELSEIF pos/16 < 2 THEN
+			SET p1 = CONCAT(IFNULL(p1,''), @asn);
+		ELSEIF pos/16 < 3 THEN
+			SET p2 = CONCAT(IFNULL(p2,''), @asn);
+		ELSEIF pos/16 < 4 THEN
+			SET p3 = CONCAT(IFNULL(p3,''), @asn);
+		ELSEIF pos/16 < 5 THEN
+			SET p4 = CONCAT(IFNULL(p4,''), @asn);
+		ELSEIF pos/16 < 6 THEN
+			SET p5 = CONCAT(IFNULL(p5,''), @asn);
+		ELSEIF pos/16 < 7 THEN
+			SET p6 = CONCAT(IFNULL(p6,''), @asn);
+		ELSEIF pos/16 < 8 THEN
+			SET p7 = CONCAT(IFNULL(p7,''), @asn);
+		ELSEIF pos/16 < 9 THEN
+			SET p8 = CONCAT(IFNULL(p8,''), @asn);
+		ELSEIF pos/16 < 10 THEN
+			SET p9 = CONCAT(IFNULL(p9,''), @asn);
+		ELSEIF pos/16 < 11 THEN
+			SET p10 = CONCAT(IFNULL(p10,''), @asn);
+		ELSEIF pos/16 < 12 THEN
+			SET p11 = CONCAT(IFNULL(p11,''), @asn);
+		ELSEIF pos/16 < 13 THEN
+			SET p12 = CONCAT(IFNULL(p12,''), @asn);
+		ELSEIF pos/16 < 14 THEN
+			SET p13 = CONCAT(IFNULL(p13,''), @asn);
+		ELSEIF pos/16 < 15 THEN
+			SET p14 = CONCAT(IFNULL(p14,''), @asn);
+		ELSEIF pos/16 < 16 THEN
+			SET p15 = CONCAT(IFNULL(p15,''), @asn);
+		END IF;
+
+		SET pos = pos + 1;
+	END WHILE;
+
+	IF FLOOR(len/16) >= 0 THEN SET i0 = 0; SET p0 = CONCAT(p0,'%'); END IF;
+	IF FLOOR(len/16) >= 1 THEN SET i1 = 0; SET p1 = CONCAT(p1,'%'); END IF;
+	IF FLOOR(len/16) >= 2 THEN SET i2 = 0; SET p2 = CONCAT(p2,'%'); END IF;
+	IF FLOOR(len/16) >= 3 THEN SET i3 = 0; SET p3 = CONCAT(p3,'%'); END IF;
+	IF FLOOR(len/16) >= 4 THEN SET i4 = 0; SET p4 = CONCAT(p4,'%'); END IF;
+	IF FLOOR(len/16) >= 5 THEN SET i5 = 0; SET p5 = CONCAT(p5,'%'); END IF;
+	IF FLOOR(len/16) >= 6 THEN SET i6 = 0; SET p6 = CONCAT(p6,'%'); END IF;
+	IF FLOOR(len/16) >= 7 THEN SET i7 = 0; SET p7 = CONCAT(p7,'%'); END IF;
+	IF FLOOR(len/16) >= 8 THEN SET i8 = 0; SET p8 = CONCAT(p8,'%'); END IF;
+	IF FLOOR(len/16) >= 9 THEN SET i9 = 0; SET p9 = CONCAT(p9,'%'); END IF;
+	IF FLOOR(len/16) >= 10 THEN SET i10 = 0; SET p10 = CONCAT(p10,'%'); END IF;
+	IF FLOOR(len/16) >= 11 THEN SET i11 = 0; SET p11 = CONCAT(p11,'%'); END IF;
+	IF FLOOR(len/16) >= 12 THEN SET i12 = 0; SET p12 = CONCAT(p12,'%'); END IF;
+	IF FLOOR(len/16) >= 13 THEN SET i13 = 0; SET p13 = CONCAT(p13,'%'); END IF;
+	IF FLOOR(len/16) >= 14 THEN SET i14 = 0; SET p14 = CONCAT(p14,'%'); END IF;
+	IF FLOOR(len/16) >= 15 THEN SET i15 = 0; SET p15 = CONCAT(p15,'%'); END IF;
+
+	SET @p0=p0; SET @i0=i0;
+	SET @p1=p1; SET @i1=i1;
+	SET @p2=p2; SET @i2=i2;
+	SET @p3=p3; SET @i3=i3;
+	SET @p4=p4; SET @i4=i4;
+	SET @p5=p5; SET @i5=i5;
+	SET @p6=p6; SET @i6=i6;
+	SET @p7=p7; SET @i7=i7;
+	SET @p8=p8; SET @i8=i8;
+	SET @p9=p9; SET @i9=i9;
+	SET @p10=p10; SET @i10=i10;
+	SET @p11=p11; SET @i11=i11;
+	SET @p12=p12; SET @i12=i12;
+	SET @p13=p13; SET @i13=i13;
+	SET @p14=p14; SET @i14=i14;
+	SET @p15=p15; SET @i15=i15;
+
+	OPEN cur_peer;
+
+	my_loop2: LOOP
+
+		FETCH cur_peer INTO peerid, peerproto, peerasn;
+		IF cur_done THEN LEAVE my_loop2; END IF;
+
+		IF peerasn=@as0 AND peerproto = 4 THEN
+
+			INSERT INTO subtree_temp (aspath, cnt4)
+			(SELECT
+				SHOW_ASPATH(IF(a.aslen>len, len+1, a.aslen), aspath0, aspath1, aspath2, aspath3, aspath4, aspath5, aspath6, aspath7,
+				aspath8, aspath9, aspath10, aspath11, aspath12, aspath13, aspath14, aspath15) AS aspath, 1
+			FROM
+				route4 r LEFT JOIN aspath a ON r.aspathid = a.id
+			WHERE
+				r.peerid = peerid AND
+				r.as1 = @as1 AND r.as2 = @as2 AND r.as3 = @as3 AND r.as4 = @as4 AND
+				( aspath0  LIKE p0  OR 1=i0  ) AND
+				( aspath1  LIKE p1  OR 1=i1  ) AND
+				( aspath2  LIKE p2  OR 1=i2  ) AND
+				( aspath3  LIKE p3  OR 1=i3  ) AND
+				( aspath4  LIKE p4  OR 1=i4  ) AND
+				( aspath5  LIKE p5  OR 1=i5  ) AND
+				( aspath6  LIKE p6  OR 1=i6  ) AND
+				( aspath7  LIKE p7  OR 1=i7  ) AND
+				( aspath8  LIKE p8  OR 1=i8  ) AND
+				( aspath9  LIKE p9  OR 1=i9  ) AND
+				( aspath10 LIKE p10 OR 1=i10 ) AND
+				( aspath11 LIKE p11 OR 1=i11 ) AND
+				( aspath12 LIKE p12 OR 1=i12 ) AND
+				( aspath13 LIKE p13 OR 1=i13 ) AND
+				( aspath14 LIKE p14 OR 1=i14 ) AND
+				( aspath15 LIKE p15 OR 1=i15 ))
+			ON DUPLICATE KEY UPDATE cnt4=cnt4+1;
+
+		ELSEIF peerasn=@as0 AND peerproto = 6 THEN
+
+			INSERT INTO subtree_temp (aspath, cnt6)
+			(SELECT
+				SHOW_ASPATH(IF(a.aslen>len, len+1, a.aslen), aspath0, aspath1, aspath2, aspath3, aspath4, aspath5, aspath6, aspath7,
+				aspath8, aspath9, aspath10, aspath11, aspath12, aspath13, aspath14, aspath15) AS aspath, 1
+			FROM
+				route6 r LEFT JOIN aspath a ON r.aspathid = a.id
+			WHERE
+				r.peerid = peerid AND
+				r.as1 = @as1 AND r.as2 = @as2 AND r.as3 = @as3 AND r.as4 = @as4 AND
+				( aspath0  LIKE p0  OR 1=i0  ) AND
+				( aspath1  LIKE p1  OR 1=i1  ) AND
+				( aspath2  LIKE p2  OR 1=i2  ) AND
+				( aspath3  LIKE p3  OR 1=i3  ) AND
+				( aspath4  LIKE p4  OR 1=i4  ) AND
+				( aspath5  LIKE p5  OR 1=i5  ) AND
+				( aspath6  LIKE p6  OR 1=i6  ) AND
+				( aspath7  LIKE p7  OR 1=i7  ) AND
+				( aspath8  LIKE p8  OR 1=i8  ) AND
+				( aspath9  LIKE p9  OR 1=i9  ) AND
+				( aspath10 LIKE p10 OR 1=i10 ) AND
+				( aspath11 LIKE p11 OR 1=i11 ) AND
+				( aspath12 LIKE p12 OR 1=i12 ) AND
+				( aspath13 LIKE p13 OR 1=i13 ) AND
+				( aspath14 LIKE p14 OR 1=i14 ) AND
+				( aspath15 LIKE p15 OR 1=i15 ))
+			ON DUPLICATE KEY UPDATE cnt6=cnt6+1;
+
+
+		END IF;
+	END LOOP;
+END IF;
+
+UPDATE subtree_temp SET tot=cnt4+cnt6;
+SELECT * FROM subtree_temp ORDER BY tot DESC LIMIT poff, psize;
+
+END ;;
+DELIMITER ;
+

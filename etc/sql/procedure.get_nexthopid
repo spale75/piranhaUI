@@ -1,0 +1,29 @@
+DELIMITER ;;
+CREATE PROCEDURE `get_nexthopid`(IN nexthop VARCHAR(50), OUT nexthopid INT UNSIGNED)
+MYPROC:BEGIN
+
+
+
+
+IF nexthop IS NULL THEN
+	SET nexthopid = NULL;
+    LEAVE MYPROC;
+END IF;
+
+
+
+SELECT nexthop.id INTO nexthopid FROM nexthop WHERE nexthop.nexthop = nexthop;
+
+IF nexthopid IS NULL THEN
+
+    INSERT INTO nexthop SET	nexthop.nexthop = nexthop;
+
+
+    SELECT nexthop.id INTO nexthopid FROM nexthop WHERE nexthop.nexthop = nexthop;
+
+END IF;
+
+
+END ;;
+DELIMITER ;
+

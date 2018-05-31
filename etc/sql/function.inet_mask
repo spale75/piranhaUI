@@ -1,0 +1,12 @@
+DELIMITER ;;
+CREATE FUNCTION `INET_MASK`(prefix VARCHAR(15), mask INTEGER UNSIGNED) RETURNS varchar(15) CHARSET latin1
+BEGIN
+
+IF mask > 32
+THEN
+	RETURN -1;
+END IF;
+
+RETURN inet_ntoa(inet_aton(prefix) & ( 0xFFFFFFFF ^ (pow(2,32-mask)-1)));
+END ;;
+DELIMITER ;

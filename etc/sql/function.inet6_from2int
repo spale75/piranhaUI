@@ -1,0 +1,15 @@
+DELIMITER ;;
+CREATE FUNCTION `INET6_FROM2INT`(prefix1 BIGINT UNSIGNED, prefix2 BIGINT UNSIGNED) RETURNS varchar(50) CHARSET latin1
+BEGIN
+
+RETURN INET6_NTOA(
+		UNHEX(
+			CONCAT(
+				LPAD(CONV(prefix1,10,16),16,'0'),
+                LPAD(CONV(prefix2,10,16),16,'0')
+			)
+		)
+	);
+
+END ;;
+DELIMITER ;

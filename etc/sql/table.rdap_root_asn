@@ -1,0 +1,12 @@
+CREATE TABLE `rdap_root_asn` (
+  `as_begin` int(10) unsigned NOT NULL,
+  `as_end` int(10) unsigned NOT NULL,
+  `size` int(10) unsigned NOT NULL,
+  `rir` varchar(50) NOT NULL,
+  `rdap` varchar(50) DEFAULT NULL,
+  `rdaps` varchar(50) DEFAULT NULL,
+  `descr` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`as_begin`,`as_end`) USING BTREE,
+  KEY `index2` (`rir`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+

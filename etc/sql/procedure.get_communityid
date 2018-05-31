@@ -1,0 +1,102 @@
+DELIMITER ;;
+CREATE PROCEDURE `get_communityid`(IN community_hex VARCHAR(2048), OUT communityid INT UNSIGNED)
+MYPROC:BEGIN
+
+
+
+
+
+DECLARE community1 VARBINARY(256);
+DECLARE community2 VARBINARY(256);
+DECLARE community3 VARBINARY(256);
+DECLARE community4 VARBINARY(256);
+DECLARE community5 VARBINARY(256);
+DECLARE community6 VARBINARY(256);
+DECLARE community7 VARBINARY(256);
+DECLARE community8 VARBINARY(256);
+
+
+DECLARE community_len INT UNSIGNED DEFAULT 0;
+
+
+DECLARE community_hash CHAR(32) DEFAULT NULL;
+
+
+DECLARE com CHAR(8);
+DECLARE done INT DEFAULT FALSE;
+DECLARE cur CURSOR FOR SELECT comsort.com FROM comsort ORDER BY com;
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+
+
+IF community_hex IS NULL THEN
+	SET community_len = 0;
+ELSE
+	SET community_len = LENGTH(community_hex) / 8;
+END IF;
+
+IF community_len = 0 THEN
+	SET communityid = NULL;
+    LEAVE MYPROC;
+END IF;
+
+
+
+
+SET community1 = SUBSTRING(community_hex FROM    1 FOR 256);
+SET community2 = SUBSTRING(community_hex FROM  257 FOR 256);
+SET community3 = SUBSTRING(community_hex FROM  513 FOR 256);
+SET community4 = SUBSTRING(community_hex FROM  769 FOR 256);
+SET community5 = SUBSTRING(community_hex FROM 1025 FOR 256);
+SET community6 = SUBSTRING(community_hex FROM 1281 FOR 256);
+SET community7 = SUBSTRING(community_hex FROM 1537 FOR 256);
+SET community8 = SUBSTRING(community_hex FROM 1793 FOR 256);
+
+
+
+SET community_len = (
+	LENGTH(IFNULL(community1,'')) +
+    LENGTH(IFNULL(community2,'')) +
+    LENGTH(IFNULL(community3,'')) +
+    LENGTH(IFNULL(community4,'')) +
+    LENGTH(IFNULL(community5,'')) +
+    LENGTH(IFNULL(community6,'')) +
+    LENGTH(IFNULL(community7,'')) +
+    LENGTH(IFNULL(community8,'')) ) / 8;
+
+
+SET community_hash = MD5(CONCAT(
+	UNHEX(IFNULL(community1,'')),
+    UNHEX(IFNULL(community2,'')),
+    UNHEX(IFNULL(community3,'')),
+    UNHEX(IFNULL(community4,'')),
+	UNHEX(IFNULL(community5,'')),
+    UNHEX(IFNULL(community6,'')),
+    UNHEX(IFNULL(community7,'')),
+    UNHEX(IFNULL(community8,'')) ));
+
+
+SELECT community.id INTO communityid FROM community WHERE community.hash = community_hash;
+
+IF communityid IS NULL THEN
+
+    INSERT INTO community SET
+		community.hash       = community_hash,
+        community.comlen     = community_len,
+		community.community1 = UNHEX(community1),
+        community.community2 = UNHEX(community2),
+        community.community3 = UNHEX(community3),
+        community.community4 = UNHEX(community4),
+        community.community5 = UNHEX(community5),
+        community.community6 = UNHEX(community6),
+        community.community7 = UNHEX(community7),
+        community.community8 = UNHEX(community8);
+
+
+    SELECT community.id INTO communityid FROM community WHERE community.hash = community_hash;
+
+END IF;
+
+
+END ;;
+DELIMITER ;

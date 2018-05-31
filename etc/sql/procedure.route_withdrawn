@@ -1,0 +1,88 @@
+DELIMITER ;;
+CREATE PROCEDURE `route_withdrawn`(
+	IN peerid			INT UNSIGNED,
+    IN timestamp		DOUBLE,
+    IN prefix			VARCHAR(50),
+    OUT error			VARCHAR(255)
+    )
+MYPROC:BEGIN
+
+
+SET @netmask = SUBSTRING_INDEX(prefix, '/', -1) + 0;
+
+
+SET prefix = REPLACE(prefix, CONCAT('/',@netmask), '');
+
+
+IF IS_IPV6(prefix) THEN
+	SET @network61 = CONV(SUBSTRING(HEX(inet6_aton(prefix)), 1, 16), 16, 10);
+    SET @network62 = CONV(SUBSTRING(HEX(inet6_aton(prefix)),17, 16), 16, 10);
+    IF @netmask IS NULL OR @netmask > 128 THEN SET error = "Invalid netmask for IPv6"; END IF;
+ELSEIF IS_IPV4(prefix) THEN
+	SET @network4 = inet_aton(prefix);
+    IF @netmask IS NULL OR @netmask > 32 THEN SET error = "Invalid netmask for IPv4"; END IF;
+ELSE
+	SET error = "prefix does not contain an IPv4/IPv6 address";
+END IF;
+
+
+IF error IS NOT NULL THEN LEAVE MYPROC; END IF;
+
+SET @peerid    = peerid;
+SET @timestamp = timestamp;
+
+
+IF @piranha_rbuf_pos IS NULL THEN
+	SET @piranha_rbuf_pos = 0;
+    SELECT value INTO @piranha_rbuf_max FROM config WHERE name = 'rbuf_max';
+
+    IF @piranha_rbuf_max IS NULL THEN SET @piranha_rbuf_cur = NULL; END IF;
+END IF;
+
+
+
+IF @network4 IS NOT NULL THEN
+
+	SET @query = CONCAT("UPDATE route4 SET valid = 0, flap_w = flap_w+1, lastupdate = FROM_UNIXTIME(?) WHERE networkb = ? AND netmask = ?");
+	PREPARE stmt FROM @query;
+	EXECUTE stmt USING @timestamp, @network4, @netmask;
+    DEALLOCATE PREPARE stmt;
+
+    IF @piranha_rbuf_pos IS NOT NULL THEN
+
+		SET @query = CONCAT("REPLACE INTO peer_rbuf_", peerid, " SET pos=?, peerid=?, timestamp=FROM_UNIXTIME(?), msg='W', network=?, netmask=?");
+		PREPARE stmt FROM @query;
+		EXECUTE stmt USING @piranha_rbuf_pos, @peerid, @timestamp, @network4, @netmask;
+		DEALLOCATE PREPARE stmt;
+
+        SET @piranha_rbuf_pos = ( @piranha_rbuf_pos + 1 ) % @piranha_rbuf_max;
+
+    END IF;
+
+
+ELSEIF @network61 IS NOT NULL AND @network62 IS NOT NULL THEN
+
+	SET @query = CONCAT("UPDATE route6 SET valid = 0, flap_w = flap_w+1, lastupdate = FROM_UNIXTIME(?) WHERE networkb1 = ? AND networkb2 = ? AND netmask = ?");
+	PREPARE stmt FROM @query;
+	EXECUTE stmt USING @timestamp, @network61, @network62, @netmask;
+    DEALLOCATE PREPARE stmt;
+
+	IF @piranha_rbuf_pos IS NOT NULL THEN
+
+		SET @query = CONCAT("REPLACE INTO peer_rbuf_", peerid, " SET pos=?, peerid=?, timestamp=FROM_UNIXTIME(?), msg='W', network1=?, network2=?, netmask=?");
+		PREPARE stmt FROM @query;
+		EXECUTE stmt USING @piranha_rbuf_pos, @peerid, @timestamp, @network61, @network62, @netmask;
+		DEALLOCATE PREPARE stmt;
+
+        SET @piranha_rbuf_pos = ( @piranha_rbuf_pos + 1 ) % @piranha_rbuf_max;
+
+    END IF;
+
+
+ELSE
+	SET error = "Unknown error with prefix/mask handling";
+END IF;
+
+END ;;
+DELIMITER ;
+

@@ -1,0 +1,16 @@
+CREATE TABLE `template_rbuf6` (
+  `pos` int(10) unsigned NOT NULL,
+  `peerid` int(10) unsigned NOT NULL,
+  `timestamp` datetime(3) DEFAULT NULL,
+  `msg` char(1) NOT NULL DEFAULT '1',
+  `network1` bigint(20) unsigned DEFAULT NULL,
+  `network2` bigint(20) unsigned DEFAULT NULL,
+  `netmask` tinyint(3) unsigned NOT NULL,
+  `origin_as` int(10) unsigned DEFAULT NULL,
+  `aspathlen` tinyint(3) unsigned DEFAULT '0',
+  `aspathbin` varbinary(1024) DEFAULT NULL,
+  `communityid` int(10) unsigned DEFAULT NULL,
+  `nexthopid` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`pos`),
+  KEY `index2` (`peerid`,`timestamp`,`msg`)
+) ENGINE=BLACKHOLE DEFAULT CHARSET=utf8;

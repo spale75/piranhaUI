@@ -1,0 +1,73 @@
+DELIMITER ;;
+CREATE PROCEDURE `aspath_stats`()
+BEGIN
+
+DECLARE as1			INT UNSIGNED DEFAULT NULL;
+DECLARE as2			INT UNSIGNED DEFAULT NULL;
+DECLARE n1          BOOLEAN DEFAULT FALSE;
+DECLARE n2          BOOLEAN DEFAULT FALSE;
+DECLARE cur_done	INT DEFAULT FALSE;
+DECLARE cur_as14	CURSOR FOR SELECT r.as1,r.as2 FROM route4 r GROUP BY r.as1,r.as2;
+DECLARE cur_as16	CURSOR FOR SELECT r.as1,r.as2 FROM route6 r GROUP BY r.as1,r.as2;
+DECLARE CONTINUE	HANDLER FOR NOT FOUND SET cur_done = TRUE;
+
+
+DROP TABLE IF EXISTS stats_aspath_tmp;
+CREATE TABLE stats_aspath_tmp LIKE stats_aspath;
+
+OPEN cur_as14;
+
+myloop: LOOP
+		FETCH cur_as14 INTO as1,as2;
+        IF cur_done THEN LEAVE myloop; END IF;
+
+
+
+        SET n1 = IF(as1 IS NULL, 1, 0);
+        SET n2 = IF(as2 IS NULL, 1, 0);
+
+        INSERT INTO stats_aspath_tmp (as0, as1, as2, as3, as4, cnt4)
+		(
+			SELECT p.asn, IFNULL(r.as1,0),IFNULL(r.as2,0),IFNULL(r.as3,0),IFNULL(r.as4,0),1
+            FROM route4 r LEFT JOIN peer p ON r.peerid = p.id
+            WHERE
+				(r.as1=as1 OR 1=n1) AND (r.as1 IS NULL OR 0=n1) AND
+                (r.as2=as2 OR 1=n2) AND (r.as2 IS NULL OR 0=n2)
+		)
+		ON DUPLICATE KEY UPDATE cnt4=cnt4+1;
+
+END LOOP;
+
+SET cur_done=FALSE;
+
+OPEN cur_as16;
+
+myloop: LOOP
+		FETCH cur_as16 INTO as1,as2;
+        IF cur_done THEN LEAVE myloop; END IF;
+
+
+
+        SET n1 = IF(as1 IS NULL, 1, 0);
+        SET n2 = IF(as2 IS NULL, 1, 0);
+
+        INSERT INTO stats_aspath_tmp (as0, as1, as2, as3, as4, cnt6)
+		(
+			SELECT p.asn, IFNULL(r.as1,0),IFNULL(r.as2,0),IFNULL(r.as3,0),IFNULL(r.as4,0),1
+            FROM route6 r LEFT JOIN peer p ON r.peerid = p.id
+            WHERE
+				(r.as1=as1 OR 1=n1) AND (r.as1 IS NULL OR 0=n1) AND
+                (r.as2=as2 OR 1=n2) AND (r.as2 IS NULL OR 0=n2)
+		)
+		ON DUPLICATE KEY UPDATE cnt6=cnt6+1;
+
+END LOOP;
+
+
+DROP TABLE IF EXISTS stats_aspath;
+ALTER TABLE stats_aspath_tmp RENAME stats_aspath;
+
+
+END ;;
+DELIMITER ;
+

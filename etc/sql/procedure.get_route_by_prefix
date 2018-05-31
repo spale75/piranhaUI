@@ -1,0 +1,169 @@
+DELIMITER ;;
+CREATE PROCEDURE `get_route_by_prefix`(
+	IN peerid	INT UNSIGNED,
+	IN prefix	VARCHAR(50),
+    IN netmask1	TINYINT UNSIGNED,
+    IN netmask2	TINYINT UNSIGNED,
+    IN psize	INT UNSIGNED,
+    IN pnum		INT UNSIGNED,
+    IN valid    BOOLEAN,
+    IN invalid  BOOLEAN
+)
+MYPROC:BEGIN
+
+DECLARE proto		TINYINT UNSIGNED	DEFAULT IF(IS_IPV4(prefix), 4, IF(IS_IPV6(prefix), 6, 0));
+DECLARE network		INT UNSIGNED		DEFAULT NULL;
+DECLARE network1	BIGINT UNSIGNED		DEFAULT NULL;
+DECLARE network2	BIGINT UNSIGNED		DEFAULT NULL;
+
+
+
+SET @peerid		= IFNULL(peerid,0);
+SET network	    = IF(proto=4, INET_ATON(prefix), NULL);
+SET network1	= IF(proto=6, CONV(SUBSTRING(HEX(INET6_ATON(prefix)),  1, 16), 16, 10), NULL);
+SET network2	= IF(proto=6, CONV(SUBSTRING(HEX(INET6_ATON(prefix)), 17, 16), 16, 10), NULL);
+SET @netmask1	= IF(proto=4 AND netmask1 <= 32, netmask1, IF(proto=6 AND netmask1 <= 128, netmask1, NULL));
+SET @netmask2	= IF(proto=4 AND netmask2 <= 32, netmask2, IF(proto=6 AND netmask2 <= 128, netmask2, NULL));
+SET @q_prefix	= CONCAT("SELECT peer_ip, peer_asn, prefix, aspath, community, valid, updated, flap_a, flap_w FROM view_route", proto, " WHERE ");
+SET @q_suffix	= CONCAT(" AND ( valid = ? OR 1 = ? ) ORDER BY ", IF(proto=4, "route_networkb, route_netmask, peer_id", "route_networkb1, route_networkb2, route_netmask, peer_id"), " LIMIT ", psize*pnum, ",", psize);
+SET @valid      = valid;
+
+IF valid=1 AND invalid=1 THEN
+	SET @validall = 1;
+ELSE
+	SET @validall = 0;
+END IF;
+
+IF @netmask1 IS NULL THEN
+	SET @netmask2 = NULL;
+END IF;
+
+IF !proto THEN
+	SELECT "input IPv4/IPv6 address invalid" AS error;
+    LEAVE MYPROC;
+END IF;
+
+IF @netmask1 != netmask1 OR @netmask2 != netmask2 THEN
+	SELECT "input netmask invalid" AS error;
+    LEAVE MYPROC;
+END IF;
+
+
+SET @network  = network;
+SET @network1 = network1;
+SET @network2 = network2;
+
+
+
+
+IF @netmask1 IS NULL THEN
+	SET @cond = '( (1=0) ';
+    SET @mask = IF(proto=4,32,128);
+
+    WHILE @mask >= 0 DO
+
+		IF proto = 4 THEN
+
+        SET @cond = CONCAT(@cond, "OR ( route_networkb=", network & ( 0xFFFFFFFF ^ (pow(2,32-@mask)-1) ), " AND route_netmask=", @mask, " ) ");
+
+        ELSEIF proto = 6 THEN
+
+            IF @mask <= 64 THEN
+				SET @net2 = 0;
+				SET @net1 = (network1>>(64-@mask))<<(64-@mask);
+			ELSE
+				SET @net1 = network1;
+				SET @net2 = (network2>>(128-@mask))<<(128-@mask);
+			END IF;
+
+        	SET @cond = CONCAT(@cond, "OR ( route_networkb1=", @net1, " AND route_networkb2=", @net2, " AND route_netmask=", @mask, " ) ");
+
+		END IF;
+
+		SET @mask = @mask - 1;
+    END WHILE;
+
+    SET @cond = CONCAT(@cond, ' ) AND ( peer_id=? OR 0=? ) ');
+
+    SET @query = CONCAT(@q_prefix, @cond, @q_suffix);
+    PREPARE stmt FROM @query;
+    EXECUTE stmt USING @peerid, @peerid, @valid, @validall;
+
+
+ELSEIF @netmask2 IS NULL OR @netmask2 = @netmask1 THEN
+	SET @cond = '( (1=0) ';
+    SET @mask = @netmask1;
+
+
+	IF proto = 4 THEN
+
+    SET @cond = CONCAT(@cond, "OR ( route_networkb=", network & ( 0xFFFFFFFF ^ (pow(2,32-@mask)-1) ), " AND route_netmask=", @mask, " ) ");
+
+    ELSEIF proto = 6 THEN
+
+		IF @mask <= 64 THEN
+			SET @net2 = 0;
+			SET @net1 = (network1>>(64-@mask))<<(64-@mask);
+		ELSE
+			SET @net1 = network1;
+			SET @net2 = (network2>>(128-@mask))<<(128-@mask);
+		END IF;
+
+        SET @cond = CONCAT(@cond, "OR ( route_networkb1=", @net1, " AND route_networkb2=", @net2, " AND route_netmask=", @mask, " ) ");
+
+	END IF;
+
+
+    SET @cond = CONCAT(@cond, ' ) AND ( peer_id=? OR 0=? ) ');
+
+    SET @query = CONCAT(@q_prefix, @cond, @q_suffix);
+    PREPARE stmt FROM @query;
+    EXECUTE stmt USING @peerid, @peerid, @valid, @validall;
+
+
+ELSEIF @netmask1 < @netmask2 THEN
+
+	SET @cond = '( (1=0) ';
+    SET @mask = @netmask2;
+
+    WHILE @mask >= @netmask1 DO
+
+		IF proto = 4 THEN
+
+        SET @cond = CONCAT(@cond, "OR ( route_networkb=", network & ( 0xFFFFFFFF ^ (pow(2,32-@mask)-1) ), " AND route_netmask=", @mask, " ) ");
+
+        ELSEIF proto = 6 THEN
+
+            IF @mask <= 64 THEN
+				SET @net2 = 0;
+				SET @net1 = (network1>>(64-@mask))<<(64-@mask);
+			ELSE
+				SET @net1 = network1;
+				SET @net2 = (network2>>(128-@mask))<<(128-@mask);
+			END IF;
+
+        	SET @cond = CONCAT(@cond, "OR ( route_networkb1=", @net1, " AND route_networkb2=", @net2, " AND route_netmask=", @mask, " ) ");
+
+		END IF;
+
+		SET @mask = @mask - 1;
+    END WHILE;
+
+    SET @cond = CONCAT(@cond, ' ) AND ( peer_id=? OR 0=? ) ');
+
+    SET @query = CONCAT(@q_prefix, @cond, @q_suffix);
+    PREPARE stmt FROM @query;
+    EXECUTE stmt USING @peerid, @peerid, @valid, @validall;
+
+
+
+ELSEIF @netmask2 > @netmask1 THEN
+	SET @query = "nope";
+END IF;
+
+DEALLOCATE PREPARE stmt;
+
+
+END ;;
+DELIMITER ;
+

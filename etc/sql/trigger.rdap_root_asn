@@ -1,0 +1,6 @@
+DELIMITER ;;
+CREATE TRIGGER `piranha`.`rdap_root_asn_BEFORE_INSERT` BEFORE INSERT ON `rdap_root_asn` FOR EACH ROW
+BEGIN
+	SET NEW.size = NEW.as_end - NEW.as_begin;
+END;;
+DELIMITER ;

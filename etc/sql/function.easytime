@@ -1,0 +1,44 @@
+DELIMITER ;;
+CREATE FUNCTION `EASYTIME`(o DOUBLE) RETURNS varchar(255) CHARSET utf8
+BEGIN
+
+DECLARE s DOUBLE;
+DECLARE m INT UNSIGNED;
+DECLARE h INT UNSIGNED;
+DECLARE d INT UNSIGNED;
+DECLARE w INT UNSIGNED;
+
+IF o IS NULL THEN
+	RETURN NULL;
+END IF;
+
+SET s = TRIM(TRAILING '0' FROM FORMAT(o % 60, 3));
+SET o = (o - s) / 60;
+
+
+SET m = o % 60;
+SET o = (o - m) / 60;
+
+SET h = o % 24;
+SET o = (o - h) / 24;
+
+SET d = o % 7;
+SET o = (o - d) / 7;
+
+SET w = o;
+
+
+IF w > 0 THEN
+	RETURN CONCAT(w,"w",d,"d",h,"h");
+ELSEIF d > 0 THEN
+	RETURN CONCAT(d,"d",h,"h",m,"m");
+ELSEIF h > 0 THEN
+	RETURN CONCAT(h,"h",m,"m",s, "s");
+ELSEIF m > 0 THEN
+	RETURN CONCAT(m,"m",s, "s");
+ELSE
+	RETURN CONCAT(s,"s");
+END IF;
+
+END ;;
+DELIMITER ;

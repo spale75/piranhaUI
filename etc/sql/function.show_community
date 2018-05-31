@@ -1,0 +1,51 @@
+DELIMITER ;;
+CREATE FUNCTION `SHOW_COMMUNITY`(
+	len INTEGER UNSIGNED,
+	p1 VARBINARY(128),
+    p2 VARBINARY(128),
+    p3 VARBINARY(128),
+    p4 VARBINARY(128),
+    p5 VARBINARY(128),
+    p6 VARBINARY(128),
+    p7 VARBINARY(128),
+    p8 VARBINARY(128) ) RETURNS varchar(8192) CHARSET latin1
+BEGIN
+
+DECLARE output VARCHAR(8192) DEFAULT '';
+DECLARE input_select INTEGER UNSIGNED;
+DECLARE input_offset INTEGER UNSIGNED;
+DECLARE input VARBINARY(128);
+DECLARE pos INTEGER UNSIGNED DEFAULT 0;
+DECLARE sep VARCHAR(1) DEFAULT '';
+
+WHILE pos < len
+DO
+	SET input_select = FLOOR(pos / 32);
+    SET input_offset = pos % 32;
+
+    IF     ( input_select = 0 ) THEN SET input = p1;
+    ELSEIF ( input_select = 1 ) THEN SET input = p2;
+    ELSEIF ( input_select = 2 ) THEN SET input = p3;
+    ELSEIF ( input_select = 3 ) THEN SET input = p4;
+    ELSEIF ( input_select = 4 ) THEN SET input = p5;
+    ELSEIF ( input_select = 5 ) THEN SET input = p6;
+    ELSEIF ( input_select = 6 ) THEN SET input = p7;
+    ELSEIF ( input_select = 7 ) THEN SET input = p8;
+    ELSE
+		RETURN "ERROR";
+	END IF;
+
+    SET output = CONCAT(output, sep,
+					CONV(HEX(SUBSTRING(input FROM (input_offset*4)+1 FOR 2)),16,10),
+                    ':',
+                    CONV(HEX(SUBSTRING(input FROM (input_offset*4)+3 FOR 2)),16,10)
+                    );
+
+    SET sep = ' ';
+    SET pos = pos + 1;
+END WHILE;
+
+
+RETURN output;
+END ;;
+DELIMITER ;

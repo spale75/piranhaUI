@@ -1,0 +1,87 @@
+DELIMITER ;;
+CREATE PROCEDURE `manage_peer`(IN peerid INT UNSIGNED, IN action VARCHAR(50))
+BEGIN
+
+DECLARE peerproto TINYINT UNSIGNED DEFAULT 0;
+DECLARE error VARCHAR(255) DEFAULT NULL;
+
+DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET error = NULL;
+
+SELECT IF(ip4 IS NOT NULL, 4, IF(ip6 IS NOT NULL, 6, 0)) INTO peerproto FROM peer WHERE id = peerid;
+
+
+IF action = "create" THEN
+
+    IF peerproto > 0 THEN
+
+		SET @q = CONCAT("ALTER TABLE route", peerproto, " ADD PARTITION ( PARTITION part", peerid, " VALUES IN (",peerid,") )");
+
+		PREPARE stmt FROM @q; BEGIN EXECUTE stmt; END; DEALLOCATE PREPARE stmt;
+
+
+
+
+        SET @q = CONCAT("CREATE TABLE IF NOT EXISTS peer_rbuf_", peerid, " LIKE template_rbuf", peerproto);
+		PREPARE stmt FROM @q; EXECUTE stmt;
+
+		IF @@warning_count = 0 THEN
+			SET @q = CONCAT("ALTER TABLE peer_rbuf_", peerid, " ENGINE=MEMORY");
+			PREPARE stmt2 FROM @q; EXECUTE stmt2; DEALLOCATE PREPARE stmt2;
+		END IF;
+
+        DEALLOCATE PREPARE stmt;
+
+    ELSE
+
+		SET error = CONCAT("peerid ", peerid, " not found, cannot create");
+
+	END IF;
+
+ELSEIF action = "delete" THEN
+
+    IF peerproto = 0 THEN
+
+        SET @q = CONCAT("ALTER TABLE route", peerproto, " DROP PARTITION part", peerid);
+
+        PREPARE stmt FROM @q; BEGIN EXECUTE stmt; END; DEALLOCATE PREPARE stmt;
+
+		SET @q = CONCAT("DROP TABLE IF EXISTS peer_rbuf_", peerid);
+		PREPARE stmt FROM @q; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+    ELSE
+
+		SET error = CONCAT("peerid ", peerid, " exists, cannot delete");
+
+    END IF;
+
+ELSEIF action = "reset" THEN
+
+    IF peerproto > 0 THEN
+
+        SET @q = CONCAT("ALTER TABLE route", peerproto, " DROP PARTITION part", peerid);
+
+        PREPARE stmt FROM @q; BEGIN EXECUTE stmt; END; DEALLOCATE PREPARE stmt;
+
+        SET @q = CONCAT("ALTER TABLE route", peerproto, " ADD PARTITION ( PARTITION part", peerid, " VALUES IN (",peerid,") )");
+		PREPARE stmt FROM @q; BEGIN EXECUTE stmt; END; DEALLOCATE PREPARE stmt;
+
+        SET @q = CONCAT("TRUNCATE TABLE peer_rbuf_", peerid);
+		PREPARE stmt FROM @q; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+    ELSE
+
+		SET error = CONCAT("peerid ", peerid, " not found, cannot reset");
+
+    END IF;
+
+ELSE
+
+    SET error = "Valid commands are: manager_peer(<peerid>,<create|reset|delete>);";
+
+END IF;
+
+IF error IS NOT NULL THEN SELECT error; END IF;
+
+END ;;
+DELIMITER ;
+

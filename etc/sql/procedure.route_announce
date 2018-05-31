@@ -1,0 +1,271 @@
+DELIMITER ;;
+CREATE PROCEDURE `route_announce`(
+	IN peerid			INT UNSIGNED,
+    IN timestamp		DOUBLE,
+    IN prefix			VARCHAR(50),
+	IN nexthop			VARCHAR(50),
+    IN origin_as		INT UNSIGNED,
+    IN aspath_hex		VARCHAR(2048),
+    IN community_hex	VARCHAR(2048),
+    OUT error			VARCHAR(255)
+    )
+MYPROC:BEGIN
+
+
+DECLARE network4	INT UNSIGNED DEFAULT NULL;
+DECLARE network4e	INT UNSIGNED DEFAULT NULL;
+DECLARE network61	BIGINT UNSIGNED DEFAULT NULL;
+DECLARE network62	BIGINT UNSIGNED DEFAULT NULL;
+DECLARE network61e	BIGINT UNSIGNED DEFAULT NULL;
+DECLARE network62e	BIGINT UNSIGNED DEFAULT NULL;
+DECLARE netmask		TINYINT UNSIGNED DEFAULT NULL;
+DECLARE aspathlen   INT UNSIGNED DEFAULT LENGTH(aspath_hex)/8;
+
+SET netmask = SUBSTRING_INDEX(prefix, '/', -1) + 0;
+
+
+SET prefix = REPLACE(prefix, CONCAT('/',netmask), '');
+
+
+IF IS_IPV6(prefix) THEN
+
+
+    SET network61 = CONV(SUBSTRING(HEX(inet6_aton(prefix)), 1, 16), 16, 10);
+    SET network62 = CONV(SUBSTRING(HEX(inet6_aton(prefix)),17, 16), 16, 10);
+
+    IF netmask IS NULL OR netmask > 128 THEN
+		SET error = "Invalid netmask for IPv6";
+	ELSEIF netmask = 0 THEN
+		SET network61e = CONV(HEX(0xffffffffffffffff),16,10);
+        SET network62e = CONV(HEX(0xffffffffffffffff),16,10);
+	ELSEIF netmask <= 64 THEN
+		SET network61e = network61 + (1<<(64-netmask)) - 1;
+        SET network62e = CONV(HEX(0xffffffffffffffff),16,10);
+	ELSE
+		SET network61e = network61;
+        SET network62e = network62 + (1<<(128-netmask)) - 1;
+	END IF;
+
+ELSEIF IS_IPV4(prefix) THEN
+
+    SET network4 = inet_aton(prefix);
+
+    IF netmask IS NULL OR netmask > 32 THEN
+		SET error = "Invalid netmask for IPv4";
+	ELSEIF netmask = 0 THEN
+        SET network4e = CONV(HEX(0xffffffff),16,10);
+	ELSE
+		SET network4e = network4 + (1<<(32-netmask)) - 1;
+	END IF;
+
+ELSE
+	SET error = "prefix does not contain an IPv4/IPv6 address";
+END IF;
+
+
+IF error IS NOT NULL THEN LEAVE MYPROC; END IF;
+
+CALL get_communityid(community_hex, @communityid);
+CALL get_nexthopid(nexthop, @nexthopid);
+CALL get_aspathid(aspath_hex, @aspathid);
+
+SET @peerid    = peerid;
+SET @timestamp = timestamp;
+SET @origin_as = origin_as;
+SET @aspathbin = UNHEX(aspath_hex);
+SET @aspathlen = LENGTH(aspath_hex)/8;
+
+SET @n1        = IF(aspathlen>1, CONV(SUBSTRING(aspath_hex FROM  9 FOR 8),16,10), NULL);
+SET @n2        = IF(aspathlen>2, CONV(SUBSTRING(aspath_hex FROM 17 FOR 8),16,10), NULL);
+SET @n3        = IF(aspathlen>3, CONV(SUBSTRING(aspath_hex FROM 25 FOR 8),16,10), NULL);
+SET @n4        = IF(aspathlen>4, CONV(SUBSTRING(aspath_hex FROM 33 FOR 8),16,10), NULL);
+
+
+IF @piranha_rbuf_pos IS NULL THEN
+	SET @piranha_rbuf_pos = 0;
+    SELECT value INTO @piranha_rbuf_max FROM config WHERE name = 'rbuf_max';
+
+    IF @piranha_rbuf_max IS NULL THEN SET @piranha_rbuf_cur = NULL; END IF;
+END IF;
+
+
+IF network4 IS NOT NULL THEN
+
+
+
+
+
+
+
+
+
+
+
+
+
+	SET @network4  = network4;
+    SET @network4e = network4e;
+    SET @netmask   = netmask;
+
+	INSERT INTO route4 SET
+		route4.peerid      = peerid,
+        route4.networkb    = network4,
+        route4.networke    = network4e,
+        route4.netmask     = netmask,
+        route4.nexthopid   = @nexthopid,
+        route4.origin_as   = @origin_as,
+        route4.communityid = @communityid,
+        route4.lastupdate  = FROM_UNIXTIME(@timestamp),
+        route4.flap_a      = 1,
+        route4.aspathid    = @aspathid,
+        route4.as1         = @n1,
+        route4.as2         = @n2,
+        route4.as3         = @n3,
+        route4.as4         = @n4
+        ON DUPLICATE KEY UPDATE
+        route4.nexthopid   = @nexthopid,
+        route4.origin_as   = @origin_as,
+        route4.communityid = @communityid,
+        route4.lastupdate  = FROM_UNIXTIME(@timestamp),
+        route4.flap_a      = route4.flap_a + 1,
+        route4.aspathid    = @aspathid,
+        route4.as1         = @n1,
+        route4.as2         = @n2,
+        route4.as3         = @n3,
+        route4.as4         = @n4;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    IF @piranha_rbuf_pos IS NOT NULL THEN
+
+		SET @query = CONCAT(
+			"REPLACE INTO peer_rbuf_", peerid, " SET ",
+            "pos=?, msg='A', ",
+			"peerid=?, network=?, netmask=?, ",
+			"nexthopid=?, origin_as=?, communityid=?, ",
+			"timestamp=FROM_UNIXTIME(?), aspathlen=?, ",
+			"aspathbin=?"
+		);
+
+		PREPARE stmt FROM @query;
+		EXECUTE stmt USING
+			@piranha_rbuf_pos,
+			@peerid, @network4, @netmask,
+			@nexthopid, @origin_as, @communityid,
+			@timestamp, @aspathlen,
+			@aspathbin;
+		DEALLOCATE PREPARE stmt;
+
+        SET @piranha_rbuf_pos = ( @piranha_rbuf_pos + 1 ) % @piranha_rbuf_max;
+
+    END IF;
+
+ELSEIF network61 IS NOT NULL AND network62 IS NOT NULL THEN
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	SET @network61  = network61;
+    SET @network61e = network61e;
+    SET @network62  = network62;
+    SET @network62e = network62e;
+    SET @netmask    = netmask;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	INSERT INTO route6 SET
+		route6.peerid      = peerid,
+        route6.networkb1   = network61,
+        route6.networkb2   = network62,
+        route6.networke1   = network61e,
+        route6.networke2   = network62e,
+        route6.netmask     = netmask,
+        route6.nexthopid   = @nexthopid,
+        route6.origin_as   = @origin_as,
+        route6.communityid = @communityid,
+        route6.lastupdate  = FROM_UNIXTIME(@timestamp),
+        route6.flap_a      = 1,
+        route6.aspathid    = @aspathid,
+        route6.as1         = @n1,
+        route6.as2         = @n2,
+        route6.as3         = @n3,
+        route6.as4         = @n4
+	ON DUPLICATE KEY UPDATE
+        route6.nexthopid   = @nexthopid,
+        route6.origin_as   = @origin_as,
+        route6.communityid = @communityid,
+        route6.lastupdate  = FROM_UNIXTIME(@timestamp),
+        route6.flap_a      = route6.flap_a + 1,
+        route6.aspathid    = @aspathid,
+        route6.as1         = @n1,
+        route6.as2         = @n2,
+        route6.as3         = @n3,
+        route6.as4         = @n4;
+
+
+
+    IF @piranha_rbuf_pos IS NOT NULL THEN
+
+		SET @query = CONCAT(
+			"REPLACE INTO peer_rbuf_", peerid, " SET ",
+            "pos=?, msg='A', ",
+			"peerid=?, network1=?, network2=?, netmask=?, ",
+			"nexthopid=?, origin_as=?, communityid=?, ",
+			"timestamp=FROM_UNIXTIME(?), aspathlen=?, ",
+			"aspathbin=?"
+		);
+
+		PREPARE stmt FROM @query;
+		EXECUTE stmt USING
+			@piranha_rbuf_pos,
+			@peerid, @network61, @network62, @netmask,
+			@nexthopid, @origin_as, @communityid,
+			@timestamp, @aspathlen,
+			@aspathbin;
+		DEALLOCATE PREPARE stmt;
+
+
+        SET @piranha_rbuf_pos = ( @piranha_rbuf_pos + 1 ) % @piranha_rbuf_max;
+
+    END IF;
+
+
+ELSE
+	SET error = "Unknown error with prefix/mask handling";
+END IF;
+
+END ;;
+DELIMITER ;
+

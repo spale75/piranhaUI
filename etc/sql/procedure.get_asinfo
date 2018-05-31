@@ -1,0 +1,13 @@
+DELIMITER ;;
+CREATE PROCEDURE `get_asinfo`(IN `asn` INT)
+    READS SQL DATA
+SELECT asn, name, country, rir
+FROM asinfo_rir
+WHERE asn BETWEEN as_begin AND as_end
+AND	rir = (
+        SELECT rir
+        FROM asinfo_iana
+        WHERE asn BETWEEN as_begin
+        AND as_end LIMIT 1) ;;
+DELIMITER ;
+

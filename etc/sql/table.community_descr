@@ -1,0 +1,8 @@
+CREATE TABLE `descr_community` (
+  `asn` int(10) unsigned NOT NULL,
+  `num1` int(10) unsigned DEFAULT NULL,
+  `num2` int(10) unsigned DEFAULT NULL,
+  `name` varchar(45) DEFAULT NULL,
+  UNIQUE KEY `index1` (`asn`,`num1`,`num2`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+

@@ -1,0 +1,7 @@
+CREATE TABLE `nexthop` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `nexthop` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `index2` (`nexthop`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+

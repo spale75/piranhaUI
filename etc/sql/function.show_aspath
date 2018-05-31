@@ -1,0 +1,66 @@
+DELIMITER ;;
+CREATE FUNCTION `SHOW_ASPATH`(
+	len INTEGER UNSIGNED,
+	p0 VARBINARY(128),
+    p1 VARBINARY(128),
+    p2 VARBINARY(128),
+    p3 VARBINARY(128),
+    p4 VARBINARY(128),
+    p5 VARBINARY(128),
+    p6 VARBINARY(128),
+    p7 VARBINARY(128),
+    p8 VARBINARY(128),
+    p9 VARBINARY(128),
+    p10 VARBINARY(128),
+    p11 VARBINARY(128),
+    p12 VARBINARY(128),
+    p13 VARBINARY(128),
+    p14 VARBINARY(128),
+    p15 VARBINARY(128)
+    ) RETURNS varchar(8192) CHARSET latin1
+BEGIN
+
+DECLARE output VARCHAR(8192) DEFAULT '';
+DECLARE input_select INTEGER UNSIGNED;
+DECLARE input_offset INTEGER UNSIGNED;
+DECLARE input VARBINARY(128);
+DECLARE pos INTEGER UNSIGNED DEFAULT 0;
+DECLARE sep VARCHAR(1) DEFAULT '';
+
+WHILE pos < len
+DO
+	SET input_select = FLOOR(pos / 16);
+    SET input_offset = pos % 16;
+
+    IF     ( input_select = 0 ) THEN SET input = p0;
+    ELSEIF ( input_select = 1 ) THEN SET input = p1;
+    ELSEIF ( input_select = 2 ) THEN SET input = p2;
+    ELSEIF ( input_select = 3 ) THEN SET input = p3;
+    ELSEIF ( input_select = 4 ) THEN SET input = p4;
+    ELSEIF ( input_select = 5 ) THEN SET input = p5;
+    ELSEIF ( input_select = 6 ) THEN SET input = p6;
+    ELSEIF ( input_select = 7 ) THEN SET input = p7;
+    ELSEIF ( input_select = 8 ) THEN SET input = p8;
+    ELSEIF ( input_select = 9 ) THEN SET input = p9;
+    ELSEIF ( input_select = 10) THEN SET input = p10;
+    ELSEIF ( input_select = 11) THEN SET input = p11;
+    ELSEIF ( input_select = 12) THEN SET input = p12;
+    ELSEIF ( input_select = 13) THEN SET input = p13;
+    ELSEIF ( input_select = 14) THEN SET input = p14;
+    ELSEIF ( input_select = 15) THEN SET input = p15;
+    ELSE
+		RETURN "ERROR";
+	END IF;
+
+    SET output = CONCAT(output, sep, CONV(SUBSTRING(input FROM (input_offset*8)+1 FOR 8),16,10));
+
+    SET sep = ' ';
+    SET pos = pos + 1;
+END WHILE;
+
+
+RETURN output;
+
+END ;;
+DELIMITER ;
+

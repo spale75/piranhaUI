@@ -1,0 +1,8 @@
+CREATE TABLE `stats` (
+  `peerid` int(10) unsigned NOT NULL,
+  `ts` datetime NOT NULL,
+  `name` char(1) NOT NULL,
+  `value` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`peerid`,`ts`,`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+

@@ -1,0 +1,22 @@
+DELIMITER ;;
+CREATE PROCEDURE `get_status`(IN mypeerid INTEGER UNSIGNED, IN modulo INTEGER UNSIGNED, IN len INTEGER UNSIGNED)
+BEGIN
+
+DECLARE minutes INTEGER UNSIGNED;
+DECLARE myupdate DATETIME DEFAULT NOW();
+
+SELECT lastupdate INTO myupdate FROM peer WHERE id = mypeerid;
+
+SET minutes = CEIL(modulo/60 * len);
+
+IF minutes < 1 THEN SET minutes = 1; END IF;
+
+SELECT
+	ts, name, SUM(value) / modulo AS value_per_sec, SUM(value) as value
+FROM
+	(SELECT datetime_mod(ts, modulo) AS ts, name, value FROM stats WHERE peerid = mypeerid AND ts > DATE_SUB(myupdate, INTERVAL minutes MINUTE)) s
+GROUP BY name,ts;
+
+END ;;
+DELIMITER ;
+

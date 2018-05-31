@@ -1,0 +1,20 @@
+DELIMITER ;;
+CREATE FUNCTION `SHOW_ASPATHBIN`(aspathlen INTEGER UNSIGNED, aspathbin BLOB) RETURNS varchar(8192) CHARSET utf8
+BEGIN
+
+DECLARE output VARCHAR(8192) DEFAULT '';
+DECLARE pos INTEGER UNSIGNED DEFAULT 0;
+DECLARE sep VARCHAR(1) DEFAULT '';
+
+WHILE pos < aspathlen
+DO
+	SET output = CONCAT(output, sep, CONV(HEX(SUBSTRING(aspathbin FROM (pos*4)+1 FOR 4)),16,10));
+    SET sep = ' ';
+    SET pos = pos + 1;
+END WHILE;
+
+
+RETURN output;
+
+END ;;
+DELIMITER ;

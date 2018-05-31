@@ -1,0 +1,33 @@
+CREATE TABLE `route6` (
+  `peerid` int(10) unsigned NOT NULL,
+  `networkb1` bigint(20) unsigned NOT NULL,
+  `networkb2` bigint(20) unsigned NOT NULL,
+  `networke1` bigint(20) unsigned DEFAULT NULL,
+  `networke2` bigint(20) unsigned DEFAULT NULL,
+  `netmask` tinyint(3) unsigned NOT NULL,
+  `origin_as` int(10) unsigned DEFAULT NULL,
+  `as1` int(10) unsigned DEFAULT NULL,
+  `as2` int(10) unsigned DEFAULT NULL,
+  `as3` int(10) unsigned DEFAULT NULL,
+  `as4` int(10) unsigned DEFAULT NULL,
+  `nexthopid` int(10) unsigned DEFAULT NULL,
+  `aspathid` int(10) unsigned DEFAULT NULL,
+  `communityid` int(10) unsigned DEFAULT NULL,
+  `valid` tinyint(4) NOT NULL DEFAULT '1',
+  `flap_a` int(10) unsigned NOT NULL DEFAULT '0',
+  `flap_w` int(10) unsigned NOT NULL DEFAULT '0',
+  `lastupdate` datetime(3) DEFAULT NULL,
+  PRIMARY KEY (`peerid`,`networkb1`,`networkb2`,`netmask`),
+  KEY `idx_origin_as` (`origin_as`),
+  KEY `idx_lastupdate` (`lastupdate`),
+  KEY `idx_communityid` (`communityid`) USING BTREE,
+  KEY `idx_network-mask` (`networkb1`,`networkb2`,`netmask`),
+  KEY `idx_netnetmask` (`networkb1`,`networkb2`,`networke1`,`networke2`,`netmask`),
+  KEY `idx_flapa` (`flap_a`),
+  KEY `idx_flapw` (`flap_w`),
+  KEY `idx_validnetmask` (`valid`,`netmask`),
+  KEY `idx_netmask` (`netmask`),
+  KEY `idx_asp` (`as1`,`as2`,`as3`,`as4`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+PARTITION BY LIST (peerid)
+(PARTITION part0 VALUES IN (0) ENGINE = InnoDB);

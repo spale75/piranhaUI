@@ -1,0 +1,103 @@
+DELIMITER ;;
+CREATE PROCEDURE `get_aspathid`(IN aspath_hex VARCHAR(2048), OUT aspathid INT UNSIGNED)
+MYPROC:BEGIN
+
+
+
+
+DECLARE aspath0  VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM ( 0*128)+1 FOR 128));
+DECLARE aspath1  VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM ( 1*128)+1 FOR 128));
+DECLARE aspath2  VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM ( 2*128)+1 FOR 128));
+DECLARE aspath3  VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM ( 3*128)+1 FOR 128));
+DECLARE aspath4  VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM ( 4*128)+1 FOR 128));
+DECLARE aspath5  VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM ( 5*128)+1 FOR 128));
+DECLARE aspath6  VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM ( 6*128)+1 FOR 128));
+DECLARE aspath7  VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM ( 7*128)+1 FOR 128));
+DECLARE aspath8  VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM ( 8*128)+1 FOR 128));
+DECLARE aspath9  VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM ( 9*128)+1 FOR 128));
+DECLARE aspath10 VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM (10*128)+1 FOR 128));
+DECLARE aspath11 VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM (11*128)+1 FOR 128));
+DECLARE aspath12 VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM (12*128)+1 FOR 128));
+DECLARE aspath13 VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM (13*128)+1 FOR 128));
+DECLARE aspath14 VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM (14*128)+1 FOR 128));
+DECLARE aspath15 VARBINARY(128) DEFAULT UPPER(SUBSTRING(aspath_hex FROM (15*128)+1 FOR 128));
+
+DECLARE aspathlen INT UNSIGNED DEFAULT LENGTH(aspath_hex)/8;
+DECLARE aspathhash CHAR(32) DEFAULT NULL;
+
+IF LENGTH(aspath0 )=0 THEN SET aspath0 =NULL; END IF;
+IF LENGTH(aspath1 )=0 THEN SET aspath1 =NULL; END IF;
+IF LENGTH(aspath2 )=0 THEN SET aspath2 =NULL; END IF;
+IF LENGTH(aspath3 )=0 THEN SET aspath3 =NULL; END IF;
+IF LENGTH(aspath4 )=0 THEN SET aspath4 =NULL; END IF;
+IF LENGTH(aspath5 )=0 THEN SET aspath5 =NULL; END IF;
+IF LENGTH(aspath6 )=0 THEN SET aspath6 =NULL; END IF;
+IF LENGTH(aspath7 )=0 THEN SET aspath7 =NULL; END IF;
+IF LENGTH(aspath8 )=0 THEN SET aspath8 =NULL; END IF;
+IF LENGTH(aspath9 )=0 THEN SET aspath9 =NULL; END IF;
+IF LENGTH(aspath10)=0 THEN SET aspath10=NULL; END IF;
+IF LENGTH(aspath11)=0 THEN SET aspath11=NULL; END IF;
+IF LENGTH(aspath12)=0 THEN SET aspath12=NULL; END IF;
+IF LENGTH(aspath13)=0 THEN SET aspath13=NULL; END IF;
+IF LENGTH(aspath14)=0 THEN SET aspath14=NULL; END IF;
+IF LENGTH(aspath15)=0 THEN SET aspath15=NULL; END IF;
+
+
+IF aspathlen = 0 THEN
+	SET aspathid = NULL;
+    LEAVE MYPROC;
+END IF;
+
+
+
+SET aspathhash = MD5(CONCAT(
+	IFNULL(aspath0, ''),
+    IFNULL(aspath1, ''),
+    IFNULL(aspath2, ''),
+    IFNULL(aspath3, ''),
+	IFNULL(aspath4, ''),
+    IFNULL(aspath5, ''),
+    IFNULL(aspath6, ''),
+    IFNULL(aspath7, ''),
+	IFNULL(aspath8, ''),
+    IFNULL(aspath9, ''),
+    IFNULL(aspath10,''),
+    IFNULL(aspath11,''),
+	IFNULL(aspath12,''),
+    IFNULL(aspath13,''),
+    IFNULL(aspath14,''),
+    IFNULL(aspath15,'') ));
+
+
+SELECT aspath.id INTO aspathid FROM aspath WHERE aspath.hash = aspathhash;
+
+IF aspathid IS NULL THEN
+
+    INSERT INTO aspath SET
+		aspath.hash     = aspathhash,
+        aspath.aslen    = aspathlen,
+		aspath.aspath0  = aspath0,
+        aspath.aspath1  = aspath1,
+        aspath.aspath2  = aspath2,
+        aspath.aspath3  = aspath3,
+        aspath.aspath4  = aspath4,
+        aspath.aspath5  = aspath5,
+        aspath.aspath6  = aspath6,
+        aspath.aspath7  = aspath7,
+		aspath.aspath8  = aspath8,
+        aspath.aspath9  = aspath9,
+        aspath.aspath10 = aspath10,
+        aspath.aspath11 = aspath11,
+        aspath.aspath12 = aspath12,
+        aspath.aspath13 = aspath13,
+        aspath.aspath14 = aspath14,
+        aspath.aspath15 = aspath15;
+
+
+    SELECT aspath.id INTO aspathid FROM aspath WHERE aspath.hash = aspathhash;
+
+END IF;
+
+
+END ;;
+DELIMITER ;
