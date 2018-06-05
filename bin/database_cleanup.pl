@@ -55,7 +55,7 @@ while(my($id,$ip4,$ip6) = $q->fetchrow_array()) {
 }
 
 # truncate tables
-foreach my $tbl (qw(community nexthop aspath stats stats_aspath)) {
+foreach my $tbl (qw(community nexthop aspath stats stats_aspath route4 route6)) {
 	print "TRUNCATE	TABLE $tbl\n";
 	sqlquery($dbh,"TRUNCATE TABLE $tbl");
 }

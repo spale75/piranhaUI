@@ -1,5 +1,5 @@
 DELIMITER ;;
-CREATE TRIGGER `piranha`.`rdap_root_ip6_BEFORE_INSERT` BEFORE INSERT ON `rdap_root_ip6` FOR EACH ROW
+CREATE TRIGGER `rdap_root_ip6_BEFORE_INSERT` BEFORE INSERT ON `rdap_root_ip6` FOR EACH ROW
 BEGIN
 	IF NEW.netmask = 0 THEN
 		SET NEW.networke1 = CONV(HEX(0xffffffffffffffff),16,10);

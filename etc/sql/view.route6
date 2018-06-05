@@ -1,4 +1,59 @@
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`debian-sys-maint`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `view_route6` AS select `r`.`peerid` AS `peer_id`,concat(`INET6_FROM2INT`(`r`.`networkb1`,`r`.`networkb2`),'/',`r`.`netmask`) AS `prefix`,`r`.`origin_as` AS `origin_as`,`r`.`as1` AS `as1`,`r`.`as2` AS `as2`,`r`.`as3` AS `as3`,`r`.`as4` AS `as4`,`r`.`valid` AS `valid`,`r`.`flap_a` AS `flap_a`,`r`.`flap_w` AS `flap_w`,`r`.`lastupdate` AS `updated`,`SHOW_ASPATH`(`a`.`aslen`,`a`.`aspath0`,`a`.`aspath1`,`a`.`aspath2`,`a`.`aspath3`,`a`.`aspath4`,`a`.`aspath5`,`a`.`aspath6`,`a`.`aspath7`,`a`.`aspath8`,`a`.`aspath9`,`a`.`aspath10`,`a`.`aspath11`,`a`.`aspath12`,`a`.`aspath13`,`a`.`aspath14`,`a`.`aspath15`) AS `aspath`,`SHOW_COMMUNITY`(`c`.`comlen`,`c`.`community1`,`c`.`community2`,`c`.`community3`,`c`.`community4`,`c`.`community5`,`c`.`community6`,`c`.`community7`,`c`.`community8`) AS `community`,inet_ntoa(`n`.`nexthop`) AS `nexthop`,inet_ntoa(`p`.`ip4`) AS `peer_ip`,`p`.`asn` AS `peer_asn`,`r`.`networkb1` AS `route_networkb1`,`r`.`networkb2` AS `route_networkb2`,`r`.`networke1` AS `route_networke1`,`r`.`networke2` AS `route_networke2`,`r`.`netmask` AS `route_netmask` from ((((`route6` `r` left join `aspath` `a` on((`r`.`aspathid` = `a`.`id`))) left join `community` `c` on((`r`.`communityid` = `c`.`id`))) left join `nexthop` `n` on((`r`.`nexthopid` = `c`.`id`))) left join `peer` `p` on((`r`.`peerid` = `p`.`id`))) */;
-
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `debian-sys-maint`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `view_route6` AS
+    SELECT 
+        `r`.`peerid` AS `peer_id`,
+        CONCAT(INET6_FROM2INT(`r`.`networkb1`, `r`.`networkb2`),
+                '/',
+                `r`.`netmask`) AS `prefix`,
+        `r`.`origin_as` AS `origin_as`,
+        `r`.`as1` AS `as1`,
+        `r`.`as2` AS `as2`,
+        `r`.`as3` AS `as3`,
+        `r`.`as4` AS `as4`,
+        `r`.`valid` AS `valid`,
+        `r`.`flap_a` AS `flap_a`,
+        `r`.`flap_w` AS `flap_w`,
+        `r`.`lastupdate` AS `updated`,
+        SHOW_ASPATH(`a`.`aslen`,
+                `a`.`aspath0`,
+                `a`.`aspath1`,
+                `a`.`aspath2`,
+                `a`.`aspath3`,
+                `a`.`aspath4`,
+                `a`.`aspath5`,
+                `a`.`aspath6`,
+                `a`.`aspath7`,
+                `a`.`aspath8`,
+                `a`.`aspath9`,
+                `a`.`aspath10`,
+                `a`.`aspath11`,
+                `a`.`aspath12`,
+                `a`.`aspath13`,
+                `a`.`aspath14`,
+                `a`.`aspath15`) AS `aspath`,
+        SHOW_COMMUNITY(`c`.`comlen`,
+                `c`.`community1`,
+                `c`.`community2`,
+                `c`.`community3`,
+                `c`.`community4`,
+                `c`.`community5`,
+                `c`.`community6`,
+                `c`.`community7`,
+                `c`.`community8`) AS `community`,
+        INET_NTOA(`n`.`nexthop`) AS `nexthop`,
+        `p`.`ip6` AS `peer_ip`,
+        `p`.`asn` AS `peer_asn`,
+        `r`.`networkb1` AS `route_networkb1`,
+        `r`.`networkb2` AS `route_networkb2`,
+        `r`.`networke1` AS `route_networke1`,
+        `r`.`networke2` AS `route_networke2`,
+        `r`.`netmask` AS `route_netmask`
+    FROM
+        ((((`route6` `r`
+        LEFT JOIN `aspath` `a` ON ((`r`.`aspathid` = `a`.`id`)))
+        LEFT JOIN `community` `c` ON ((`r`.`communityid` = `c`.`id`)))
+        LEFT JOIN `nexthop` `n` ON ((`r`.`nexthopid` = `c`.`id`)))
+        LEFT JOIN `peer` `p` ON ((`r`.`peerid` = `p`.`id`)));
