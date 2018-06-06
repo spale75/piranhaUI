@@ -84,7 +84,7 @@ my %conf = (
 		action => '^(get|set)$',
 		asn    => '^\d+$',
 		aspath => '^(\d+( \d+)*|null)$',
-		list   => '^(flaps|long_aspath|invalid_asn)$',
+		list   => '^(flaps|long_aspath|invalid_asn|invalid_prefix)$',
 		valid  => '^(true|false)$',
 		invalid=> '^(true|false)$',
 		proto  => '^[46]$',
@@ -505,18 +505,43 @@ sub mode_top100 {
 		}
 	}
 	elsif ( $var->{list} eq 'invalid_asn' ) {
-			my @cond;
-			my $q = sqlquery($dbh, "SELECT as_begin, as_end FROM rdap_root_asn WHERE descr IS NOT NULL");
+		my @cond;
+		my $q = sqlquery($dbh, "SELECT as_begin, as_end FROM rdap_root_asn WHERE descr IS NOT NULL");
+		while(my @r = $q->fetchrow_array()) {
+			push @cond, sprintf("origin_as BETWEEN %i AND %i", @r);
+		}
+		$q = sqlquery($dbh, "
+			SELECT *
+			FROM view_$tbl
+			WHERE ( " . join(' OR ', @cond) . ") $avalid $peer_id
+			ORDER BY $rnet, route_netmask, peer_id
+			LIMIT ?,?", $var->{pagesize} * $var->{page}, $var->{pagesize});
+		while(my $x = $q->fetchrow_hashref()) { clean_aspath($x); push @{$j->{route}}, $x; }
+	}
+	elsif ( $var->{list} eq 'invalid_prefix' ) {
+		my @cond;
+		my $inetmask = 48;
+		if ( $var->{proto} eq 4 ) {
+			my $q = sqlquery($dbh, "SELECT networkb, networke FROM rdap_root_ip4 WHERE descr IS NOT NULL");
 			while(my @r = $q->fetchrow_array()) {
-				push @cond, sprintf("origin_as BETWEEN %i AND %i", @r);
+				push @cond, sprintf("route_networkb BETWEEN %i AND %i", @r);
 			}
-			$q = sqlquery($dbh, "
-				SELECT *
-				FROM view_$tbl
-				WHERE ( " . join(' OR ', @cond) . ") $avalid $peer_id
-				ORDER BY $rnet, route_netmask, peer_id
-				LIMIT ?,?", $var->{pagesize} * $var->{page}, $var->{pagesize});
-			while(my $x = $q->fetchrow_hashref()) { clean_aspath($x); push @{$j->{route}}, $x; }
+			$inetmask = 24;
+		}
+		else {
+			my $q = sqlquery($dbh, "SELECT networkb1, networke1, networkb2, networke2 FROM rdap_root_ip6 WHERE descr IS NOT NULL");
+			while(my @r = $q->fetchrow_array()) {
+				push @cond, sprintf("( route_networkb1 BETWEEN %s AND %s AND route_networkb2 BETWEEN %s AND %s )", @r);
+			}
+		}
+		my $q = sqlquery($dbh, "
+			SELECT *
+			FROM view_$tbl
+			WHERE ( " . join(' OR ', @cond) . ") OR route_netmask > $inetmask $avalid $peer_id
+			ORDER BY $rnet, route_netmask, peer_id
+			LIMIT ?,?", $var->{pagesize} * $var->{page}, $var->{pagesize});
+		while(my $x = $q->fetchrow_hashref()) { clean_aspath($x); push @{$j->{route}}, $x; }
+			
 	}
 	return $j;
 }
