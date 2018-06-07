@@ -80,7 +80,7 @@ SELECT community.id INTO communityid FROM community WHERE community.hash = commu
 
 IF communityid IS NULL THEN
 
-    INSERT INTO community SET
+    INSERT IGNORE INTO community SET
 		community.hash       = community_hash,
         community.comlen     = community_len,
 		community.community1 = UNHEX(community1),

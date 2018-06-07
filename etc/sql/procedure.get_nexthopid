@@ -16,7 +16,7 @@ SELECT nexthop.id INTO nexthopid FROM nexthop WHERE nexthop.nexthop = nexthop;
 
 IF nexthopid IS NULL THEN
 
-    INSERT INTO nexthop SET	nexthop.nexthop = nexthop;
+    INSERT IGNORE INTO nexthop SET	nexthop.nexthop = nexthop;
 
 
     SELECT nexthop.id INTO nexthopid FROM nexthop WHERE nexthop.nexthop = nexthop;

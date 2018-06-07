@@ -73,7 +73,7 @@ SELECT aspath.id INTO aspathid FROM aspath WHERE aspath.hash = aspathhash;
 
 IF aspathid IS NULL THEN
 
-    INSERT INTO aspath SET
+    INSERT IGNORE INTO aspath SET
 		aspath.hash     = aspathhash,
         aspath.aslen    = aspathlen,
 		aspath.aspath0  = aspath0,

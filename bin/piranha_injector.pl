@@ -161,8 +161,30 @@ sub handle_file {
 		'keepalive'  => 'K',
 	);
 
-
 	my $ibgp = 0;
+
+	my @queue;
+	my $lasttype;
+
+	sub flush_queue {
+		my ($q) = @_;
+
+		return if ! scalar(@{$q});
+
+		for(my $f=0; $f<$conf->{burst_childs_per_peer}; $f++) {
+			next if fork();
+			$0 .= " worker $f";
+			my $newdbh = sqlconnect($conf->{sql});
+			for(my $i=$f; defined ${$q}[$i]; $i+=$conf->{burst_childs_per_peer}) {
+				sqlquery($newdbh, @{${$q}[$i]});
+			}
+			exit;
+		}
+
+		for(my $f=0; $f<$conf->{burst_childs_per_peer}; $f++) {
+			wait();
+		}
+	}
 
 	open(P,"$conf->{piranha}/bin/ptoa -j $file |");
 	while(<P>) {
@@ -175,6 +197,16 @@ sub handle_file {
 		my $statstime = int($e->{timestamp}) - ( int($e->{timestamp}) % 60 );
 		$dbstats{$statstime}{$jmsg{$e->{type}}}++;
 
+		if (
+			defined $lasttype &&
+			( $lasttype ne $e->{type} || scalar(@queue) >= $conf->{max_burst_queue_per_child} * $conf->{burst_childs_per_peer} ) &&
+		       	( $lasttype eq 'announce' || $lasttype eq 'withdrawn' ) ) {
+
+			peer_log($peer,"queue flush: " . (scalar(@queue)));
+
+			flush_queue(\@queue);
+			@queue = ( );
+		}
 
 		if ( $e->{type} eq 'peer' ) {
 			$ibgp=$e->{msg}{peer}{asn} if $e->{msg}{peer}{type} eq 'ibgp';
@@ -218,26 +250,31 @@ sub handle_file {
 				}
 			}
 
-			sqlquery($dbh, 'CALL route_announce(?,?,?,?,?,?,?,@err)',
+			push @queue, [ "CALL route_announce(?,?,?,?,?,?,?,\@err)",
 				$peer->{id}, $e->{timestamp}, $e->{msg}{prefix}, $e->{msg}{nexthop},
-				$origin_as, $aspathhex, $communityhex);
+				$origin_as, $aspathhex, $communityhex ];
 
-			my $q = sqlquery($dbh, 'SELECT @err');
-			while(my $e = $q->fetchrow_hashref()) {
-				peer_log($peer, "error for announce msg: $e->{error}") if exists $e->{error};
-			}
+			#sqlquery($dbh, 'CALL route_announce(?,?,?,?,?,?,?,@err)',
+			#	$peer->{id}, $e->{timestamp}, $e->{msg}{prefix}, $e->{msg}{nexthop},
+			#	$origin_as, $aspathhex, $communityhex);
+			#
+			#my $q = sqlquery($dbh, 'SELECT @err');
+			#while(my $e = $q->fetchrow_hashref()) {
+			#	peer_log($peer, "error for announce msg: $e->{error}") if exists $e->{error};
+			#}
 				
-
 		}
 		elsif ( $e->{type} eq 'withdrawn' ) {
 
-			sqlquery($dbh, 'CALL route_withdrawn(?,?,?,@err)',
-				$peer->{id}, $e->{timestamp}, $e->{msg}{prefix});
+			push @queue, [ "CALL route_withdrawn(?,?,?,\@err)", $peer->{id}, $e->{timestamp}, $e->{msg}{prefix} ];
 
-			my $q = sqlquery($dbh, 'SELECT @err');
-			while(my $e = $q->fetchrow_hashref()) {
-				peer_log($peer, "error for withdrawn msg: $e->{error}") if exists $e->{error};
-			}
+			#sqlquery($dbh, 'CALL route_withdrawn(?,?,?,@err)',
+			#	$peer->{id}, $e->{timestamp}, $e->{msg}{prefix});
+
+			#my $q = sqlquery($dbh, 'SELECT @err');
+			#while(my $e = $q->fetchrow_hashref()) {
+			#	peer_log($peer, "error for withdrawn msg: $e->{error}") if exists $e->{error};
+			#}
 		}
 		elsif ( $e->{type} eq 'footer' ) {
 			peer_log($peer, "peer file end");
@@ -251,6 +288,9 @@ sub handle_file {
 			sqlquery($dbh, 'UPDATE peer SET lastupdate = FROM_UNIXTIME(?) WHERE id = ?',
 				$e->{timestamp}, $peer->{id});
 		}
+
+		$lasttype = $e->{type};
+
 	}
 	close(P);
 
