@@ -171,7 +171,16 @@ sub handle_file {
 
 		return if ! scalar(@{$q});
 
-		for(my $f=0; $f<$conf->{burst_childs_per_peer}; $f++) {
+		my $maxchilds = $conf->{burst_childs_per_peer};
+
+		if ( scalar(@{$q}) < 1000 ) {
+			for(my $i=0; defined ${$q}[$i]; $i++) {
+				sqlquery($dbh, @{${$q}[$i]});
+			}
+			return;
+		}
+
+		for(my $f=0; $f<$maxchilds; $f++) {
 			next if fork();
 			$0 .= " worker $f";
 			my $newdbh = sqlconnect($conf->{sql});
@@ -181,9 +190,7 @@ sub handle_file {
 			exit;
 		}
 
-		for(my $f=0; $f<$conf->{burst_childs_per_peer}; $f++) {
-			wait();
-		}
+		while(my $pid = wait()) { last if $pid<0; }
 	}
 
 	open(P,"$conf->{piranha}/bin/ptoa -j $file |");
